@@ -83,6 +83,22 @@ class User {
       throw error;
     }
   }
+
+  /**
+   * Delete user by ID
+   * @param {string} userId - User ID (UUID)
+   * @returns {Promise<boolean>} True if user was deleted
+   */
+  static async deleteById(userId) {
+    const query = 'DELETE FROM users WHERE id = $1 RETURNING id';
+    
+    try {
+      const result = await pool.query(query, [userId]);
+      return result.rowCount > 0;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 module.exports = User;

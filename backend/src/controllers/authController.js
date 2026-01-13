@@ -158,7 +158,59 @@ const login = async (req, res) => {
   }
 };
 
+/**
+ * Delete user account
+ * @route DELETE /api/auth/account/:userId
+ */
+const deleteAccount = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const requestingUserId = req.user.userId;
+
+    // Check if user is deleting their own account or is admin
+    // For now, only allow users to delete their own account
+    if (userId !== requestingUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only delete your own account'
+      });
+    }
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Delete the user
+    const deleted = await User.deleteById(userId);
+
+    if (deleted) {
+      return res.status(200).json({
+        success: true,
+        message: 'Account deleted successfully'
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to delete account'
+      });
+    }
+  } catch (error) {
+    console.error('Delete account error:', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete account. Please try again later.'
+    });
+  }
+};
+
 module.exports = {
   register,
-  login
+  login,
+  deleteAccount
 };
