@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: petapp
+      POSTGRES_PASSWORD: petapp
+      POSTGRES_DB: petapp
+    ports:
+      - "54321:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U petapp -d petapp"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: test
+      PORT: 3000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: petapp
+      DB_PASSWORD: petapp
+      DB_NAME: petapp
+      JWT_SECRET: test_secret_change_me
+    ports:
+      - "30080:3000"
+    depends_on:
+      db:
+        condition: service_healthy

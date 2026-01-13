@@ -1,0 +1,43 @@
+name: PR - Docker smoke test
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  smoke:
+    runs-on: self-hosted
+    timeout-minutes: 3
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compose up (build + run)
+        working-directory: backend
+        run: |
+          docker compose -f docker-compose.ci.yml up -d --build
+
+      - name: Wait and smoke test
+        run: |
+          set -e
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:30080/health >/dev/null; then
+              echo "Health OK"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Health check failed"
+          docker ps -a
+          exit 1
+
+      - name: Compose logs on failure
+        if: failure()
+        working-directory: backend
+        run: docker compose -f docker-compose.ci.yml logs --no-color
+
+      - name: Teardown
+        if: always()
+        working-directory: backend
+        run: docker compose -f docker-compose.ci.yml down -v --remove-orphans

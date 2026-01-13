@@ -1,0 +1,38 @@
+name: Deploy to server (PM2)
+
+on:
+  push:
+    branches: ["main"]
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    timeout-minutes: 15
+
+    steps:
+      - name: Sync repo on server
+        run: |
+          set -e
+          if [ ! -d /opt/pet-app/server/.git ]; then
+            mkdir -p /opt/pet-app
+            cd /opt/pet-app
+            git clone https://github.com/R5-App/server.git
+          fi
+          cd /opt/pet-app/server
+          git fetch --all
+          git reset --hard origin/main
+
+      - name: Install deps
+        working-directory: /opt/pet-app/server/backend
+        run: npm install --omit=dev
+
+      - name: Restart with PM2
+        working-directory: /opt/pet-app/server/backend
+        run: |
+          pm2 start ecosystem.config.cjs --update-env || true
+          pm2 reload pet-backend --update-env
+          pm2 save
