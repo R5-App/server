@@ -16,7 +16,7 @@ jobs:
       - name: Compose up (build + run)
         working-directory: backend
         run: |
-          docker compose -f docker-compose.ci.yml up -d --build
+          run: docker-compose -f docker-compose.ci.yml up -d --build
 
       - name: Wait and smoke test to see if pr is ok
         run: |
@@ -35,9 +35,9 @@ jobs:
       - name: Compose logs on failure
         if: failure()
         working-directory: backend
-        run: docker compose -f docker-compose.ci.yml logs --no-color
+        run: docker-compose -f docker-compose.ci.yml logs --no-color
 
       - name: Teardown
         if: always()
         working-directory: backend
-        run: docker compose -f docker-compose.ci.yml down -v --remove-orphans
+        run: docker-compose -f docker-compose.ci.yml down -v --remove-orphans
