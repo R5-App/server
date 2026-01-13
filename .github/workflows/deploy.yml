@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, ubuntu24, deploy]
+    runs-on: self-hosted
     timeout-minutes: 15
 
     steps:

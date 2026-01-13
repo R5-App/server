@@ -6,8 +6,8 @@ on:
 
 jobs:
   smoke:
-    runs-on: [self-hosted, ubuntu24, ci]
-    timeout-minutes: 20
+    runs-on: self-hosted
+    timeout-minutes: 3
 
     steps:
       - name: Checkout
