@@ -159,6 +159,33 @@ const login = async (req, res) => {
 };
 
 /**
+ * Logout user
+ * @route POST /api/auth/logout
+ */
+const logout = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Update last activity on logout
+    await User.updateLastActivity(userId);
+
+    // Return success response
+    // Note: Client should remove the JWT token from storage
+    res.status(200).json({
+      success: true,
+      message: 'Logout successful'
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Logout failed. Please try again later.'
+    });
+  }
+};
+
+/**
  * Delete user account
  * @route DELETE /api/auth/account/:userId
  */
@@ -212,5 +239,6 @@ const deleteAccount = async (req, res) => {
 module.exports = {
   register,
   login,
+  logout,
   deleteAccount
 };
