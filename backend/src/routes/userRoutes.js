@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, deleteAccount } = require('../controllers/authController');
+const { register, login, logout, deleteAccount } = require('../controllers/authController');
 const validateRegistration = require('../middleware/validateRegistration');
 const validateLogin = require('../middleware/validateLogin');
 const authenticateToken = require('../middleware/authenticateToken');
@@ -18,6 +18,13 @@ router.post('/register', validateRegistration, register);
  * @access  Public
  */
 router.post('/login', validateLogin, login);
+
+/**
+ * @route   POST /api/auth/logout
+ * @desc    Logout user
+ * @access  Private (authenticated user)
+ */
+router.post('/logout', authenticateToken, logout);
 
 /**
  * @route   DELETE /api/auth/account/:userId
