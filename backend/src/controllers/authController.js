@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const { hashPassword } = require('../utils/hashPassword');
+const { hashPassword, comparePassword } = require('../utils/hashPassword');
 const { generateToken } = require('../utils/generateToken');
 
 /**
@@ -88,6 +88,77 @@ const register = async (req, res) => {
   }
 };
 
+/**
+ * Login user
+ * @route POST /api/auth/login
+ */
+const login = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Check if username is email or username
+    let user;
+    if (username.includes('@')) {
+      user = await User.findByEmail(username);
+    } else {
+      user = await User.findByUsername(username);
+    }
+
+    // User not found
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+
+    // Verify password
+    const isPasswordValid = await comparePassword(password, user.password_hash);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+
+    // Update last activity
+    await User.updateLastActivity(user.id);
+
+    // Generate JWT token
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      username: user.username
+    });
+
+    // Return success response
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          name: user.name,
+          createdAt: user.created_at,
+          lastActivity: user.last_activity
+        },
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+
+    // Generic error response
+    res.status(500).json({
+      success: false,
+      message: 'Login failed. Please try again later.'
+    });
+  }
+};
+
 module.exports = {
-  register
+  register,
+  login
 };
