@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, logout, deleteAccount } = require('../controllers/authController');
+const { register, login, logout, deleteAccount, registerSubUser, getSubUsers } = require('../controllers/authController');
 const validateRegistration = require('../middleware/validateRegistration');
 const validateLogin = require('../middleware/validateLogin');
+const validateSubUserRegistration = require('../middleware/validateSubUserRegistration');
 const authenticateToken = require('../middleware/authenticateToken');
 
 /**
@@ -32,5 +33,19 @@ router.post('/logout', authenticateToken, logout);
  * @access  Private (authenticated user)
  */
 router.delete('/account/:userId', authenticateToken, deleteAccount);
+
+/**
+ * @route   POST /api/auth/sub-user/:parentUserId
+ * @desc    Register a sub-user linked to a parent account
+ * @access  Public (with invitation) or Private (parent user authenticated)
+ */
+router.post('/sub-user/:parentUserId', validateSubUserRegistration, registerSubUser);
+
+/**
+ * @route   GET /api/auth/sub-users
+ * @desc    Get all sub-users for the authenticated user's account
+ * @access  Private (authenticated user)
+ */
+router.get('/sub-users', authenticateToken, getSubUsers);
 
 module.exports = router;

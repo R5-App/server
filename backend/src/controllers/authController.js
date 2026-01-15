@@ -124,26 +124,43 @@ const login = async (req, res) => {
     // Update last activity
     await User.updateLastActivity(user.id);
 
-    // Generate JWT token
-    const token = generateToken({
+    // Check if user is a sub-user and get parent info
+    const parentInfo = await User.getParentUser(user.id);
+
+    // Generate JWT token with sub-user info if applicable
+    const tokenPayload = {
       userId: user.id,
       email: user.email,
       username: user.username
-    });
+    };
+
+    if (parentInfo) {
+      tokenPayload.parentUserId = parentInfo.id;
+      tokenPayload.role = parentInfo.role;
+    }
+
+    const token = generateToken(tokenPayload);
 
     // Return success response
+    const userData = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      name: user.name,
+      createdAt: user.created_at,
+      lastActivity: user.last_activity
+    };
+
+    if (parentInfo) {
+      userData.parentUserId = parentInfo.id;
+      userData.role = parentInfo.role;
+    }
+
     res.status(200).json({
       success: true,
       message: 'Login successful',
       data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          name: user.name,
-          createdAt: user.created_at,
-          lastActivity: user.last_activity
-        },
+        user: userData,
         token
       }
     });
@@ -194,13 +211,17 @@ const deleteAccount = async (req, res) => {
     const { userId } = req.params;
     const requestingUserId = req.user.userId;
 
-    // Check if user is deleting their own account or is admin
-    // For now, only allow users to delete their own account
+    // Check if user is deleting their own account
+    // Parent users can also delete their sub-users if they have admin permissions
     if (userId !== requestingUserId) {
-      return res.status(403).json({
-        success: false,
-        message: 'You can only delete your own account'
-      });
+      // Check if requesting user is a parent of the user to be deleted
+      const parentInfo = await User.getParentUser(userId);
+      if (!parentInfo || parentInfo.id !== requestingUserId) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only delete your own account or your sub-users'
+        });
+      }
     }
 
     // Check if user exists
@@ -212,7 +233,19 @@ const deleteAccount = async (req, res) => {
       });
     }
 
-    // Delete the user
+    // Check if user is a parent account with sub-users
+    const subUsers = await User.getSubUsers(userId);
+    if (subUsers.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'Cannot delete account with active sub-users. Please delete all sub-users first.',
+        data: {
+          subUsersCount: subUsers.length
+        }
+      });
+    }
+
+    // Delete the user (cascade will handle sub_users table cleanup)
     const deleted = await User.deleteById(userId);
 
     if (deleted) {
@@ -236,9 +269,165 @@ const deleteAccount = async (req, res) => {
   }
 };
 
+/**
+ * Register a sub-user for an existing account
+ * @route POST /api/auth/sub-user/:parentUserId
+ */
+const registerSubUser = async (req, res) => {
+  try {
+    const { email, username, password, name, role } = req.body;
+    const { parentUserId } = req.params;
+
+    // Verify parent user exists
+    const parentUser = await User.findById(parentUserId);
+    if (!parentUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Parent account not found'
+      });
+    }
+
+    // Check if authenticated user has permission to create sub-users for this parent account
+    // (Only the parent user or existing admin sub-users can create new sub-users)
+    if (req.user && req.user.userId !== parentUserId) {
+      const parentInfo = await User.getParentUser(req.user.userId);
+      if (!parentInfo || parentInfo.id !== parentUserId || parentInfo.role !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have permission to create sub-users for this account'
+        });
+      }
+    }
+
+    // Check if user with email already exists
+    const existingUserByEmail = await User.findByEmail(email);
+    if (existingUserByEmail) {
+      return res.status(409).json({
+        success: false,
+        message: 'Email already registered'
+      });
+    }
+
+    // Check if user with username already exists
+    const existingUserByUsername = await User.findByUsername(username);
+    if (existingUserByUsername) {
+      return res.status(409).json({
+        success: false,
+        message: 'Username already taken'
+      });
+    }
+
+    // Hash the password
+    const passwordHash = await hashPassword(password);
+
+    // Create new sub-user with link to parent account
+    const newSubUser = await User.createSubUser({
+      email,
+      username,
+      name: name || null,
+      passwordHash
+    }, parentUserId, role);
+
+    // Generate JWT token for the sub-user
+    const token = generateToken({
+      userId: newSubUser.id,
+      email: newSubUser.email,
+      username: newSubUser.username,
+      parentUserId: newSubUser.parentUserId,
+      role: newSubUser.role
+    });
+
+    // Return success response with sub-user data and token
+    res.status(201).json({
+      success: true,
+      message: 'Sub-user registered successfully',
+      data: {
+        user: {
+          id: newSubUser.id,
+          email: newSubUser.email,
+          username: newSubUser.username,
+          name: newSubUser.name,
+          createdAt: newSubUser.created_at,
+          parentUserId: newSubUser.parentUserId,
+          role: newSubUser.role
+        },
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Sub-user registration error:', error);
+
+    // Handle database constraint errors
+    if (error.code === '23505') {
+      if (error.constraint === 'users_email_key') {
+        return res.status(409).json({
+          success: false,
+          message: 'Email already registered'
+        });
+      }
+      if (error.constraint === 'users_username_key') {
+        return res.status(409).json({
+          success: false,
+          message: 'Username already taken'
+        });
+      }
+      if (error.constraint === 'sub_users_sub_user_id_key') {
+        return res.status(409).json({
+          success: false,
+          message: 'User is already a sub-user of another account'
+        });
+      }
+    }
+
+    // Foreign key constraint error
+    if (error.code === '23503') {
+      return res.status(404).json({
+        success: false,
+        message: 'Parent account not found'
+      });
+    }
+
+    // Generic error response
+    res.status(500).json({
+      success: false,
+      message: 'Sub-user registration failed. Please try again later.'
+    });
+  }
+};
+
+/**
+ * Get all sub-users for the authenticated user's account
+ * @route GET /api/auth/sub-users
+ */
+const getSubUsers = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Get all sub-users for this parent account
+    const subUsers = await User.getSubUsers(userId);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        subUsers,
+        count: subUsers.length
+      }
+    });
+  } catch (error) {
+    console.error('Get sub-users error:', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve sub-users'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   logout,
-  deleteAccount
+  deleteAccount,
+  registerSubUser,
+  getSubUsers
 };
