@@ -211,25 +211,43 @@ const deleteAccount = async (req, res) => {
     const { userId } = req.params;
     const requestingUserId = req.user.userId;
 
-    // Check if user is deleting their own account
-    // Parent users can also delete their sub-users if they have admin permissions
-    if (userId !== requestingUserId) {
-      // Check if requesting user is a parent of the user to be deleted
-      const parentInfo = await User.getParentUser(userId);
-      if (!parentInfo || parentInfo.id !== requestingUserId) {
-        return res.status(403).json({
-          success: false,
-          message: 'You can only delete your own account or your sub-users'
-        });
-      }
-    }
-
     // Check if user exists
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
+      });
+    }
+
+    // Check authorization: user themselves, parent account, or admin
+    let isAuthorized = false;
+
+    // Case 1: User is deleting their own account
+    if (userId === requestingUserId) {
+      isAuthorized = true;
+    }
+
+    // Case 2: Parent user is deleting their sub-user
+    if (!isAuthorized) {
+      const parentInfo = await User.getParentUser(userId);
+      if (parentInfo && parentInfo.id === requestingUserId) {
+        isAuthorized = true;
+      }
+    }
+
+    // Case 3: Admin user is deleting any account
+    if (!isAuthorized) {
+      const isAdmin = await User.isAdmin(requestingUserId);
+      if (isAdmin) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to delete this account'
       });
     }
 
@@ -423,11 +441,95 @@ const getSubUsers = async (req, res) => {
   }
 };
 
+/**
+ * Remove a sub-user
+ * @route DELETE /api/auth/sub-user/:subUserId
+ * @access Private - Sub-user themselves, parent account owner, or admin
+ */
+const removeSubUser = async (req, res) => {
+  try {
+    const { subUserId } = req.params;
+    const requestingUserId = req.user.userId;
+
+    // Check if the sub-user exists
+    const subUser = await User.findById(subUserId);
+    if (!subUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Sub-user not found'
+      });
+    }
+
+    // Verify that the user is actually a sub-user
+    const isSubUser = await User.isSubUser(subUserId);
+    if (!isSubUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User is not a sub-user'
+      });
+    }
+
+    // Check authorization: sub-user themselves, parent account, or admin
+    let isAuthorized = false;
+
+    // Case 1: Sub-user is removing themselves
+    if (subUserId === requestingUserId) {
+      isAuthorized = true;
+    }
+
+    // Case 2: Parent account is removing their sub-user
+    if (!isAuthorized) {
+      const parentInfo = await User.getParentUser(subUserId);
+      if (parentInfo && parentInfo.id === requestingUserId) {
+        isAuthorized = true;
+      }
+    }
+
+    // Case 3: Admin user is removing the sub-user
+    if (!isAuthorized) {
+      const isAdmin = await User.isAdmin(requestingUserId);
+      if (isAdmin) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to remove this sub-user'
+      });
+    }
+
+    // Remove the sub-user
+    const removed = await User.removeSubUser(subUserId);
+
+    if (removed) {
+      return res.status(200).json({
+        success: true,
+        message: 'Sub-user removed successfully'
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to remove sub-user'
+      });
+    }
+  } catch (error) {
+    console.error('Remove sub-user error:', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to remove sub-user. Please try again later.'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   logout,
   deleteAccount,
   registerSubUser,
-  getSubUsers
+  getSubUsers,
+  removeSubUser
 };

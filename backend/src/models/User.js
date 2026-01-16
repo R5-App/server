@@ -204,6 +204,57 @@ class User {
       throw error;
     }
   }
+
+  /**
+   * Remove a sub-user (deletes the relationship and the user account)
+   * @param {string} subUserId - Sub-user UUID to remove
+   * @returns {Promise<boolean>} True if sub-user was removed
+   */
+  static async removeSubUser(subUserId) {
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+
+      // First, delete the sub-user relationship
+      const subUserQuery = 'DELETE FROM sub_users WHERE sub_user_id = $1 RETURNING sub_user_id';
+      const subUserResult = await client.query(subUserQuery, [subUserId]);
+
+      if (subUserResult.rowCount === 0) {
+        await client.query('ROLLBACK');
+        return false;
+      }
+
+      // Then, delete the user account (cascade will handle related data)
+      const userQuery = 'DELETE FROM users WHERE id = $1 RETURNING id';
+      const userResult = await client.query(userQuery, [subUserId]);
+
+      await client.query('COMMIT');
+
+      return userResult.rowCount > 0;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Check if a user has admin permissions
+   * @param {string} userId - User UUID
+   * @returns {Promise<boolean>} True if user is an admin
+   */
+  static async isAdmin(userId) {
+    const query = 'SELECT admin_perms FROM users WHERE id = $1';
+    
+    try {
+      const result = await pool.query(query, [userId]);
+      return result.rows[0] && result.rows[0].admin_perms > 0;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 module.exports = User;
