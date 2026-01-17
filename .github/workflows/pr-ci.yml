@@ -15,8 +15,7 @@ jobs:
 
       - name: Compose up (build + run)
         working-directory: backend
-        run: |
-          run: docker-compose -f docker-compose.ci.yml up -d --build
+        run: docker-compose -f docker-compose.ci.yml up -d --build
 
       - name: Wait and smoke test to see if pr is ok
         run: |
