@@ -211,6 +211,15 @@ const deleteAccount = async (req, res) => {
     const { userId } = req.params;
     const requestingUserId = req.user.userId;
 
+    // Check if user is deleting their own account
+    // userId from params is string, requestingUserId is from JWT
+    if (userId !== String(requestingUserId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only delete your own account'
+      });
+    }
+
     // Check if user exists
     const user = await User.findById(userId);
     if (!user) {
