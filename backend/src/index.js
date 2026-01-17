@@ -10,6 +10,10 @@ const userRoutes = require('./routes/userRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy - required when behind reverse proxy (Nginx, load balancer, etc.)
+// This allows rate limiting and security features to work correctly with X-Forwarded-For headers
+app.set('trust proxy', 1); // Trust first proxy
+
 // Security middleware - helmet for security headers
 app.use(helmet());
 
