@@ -206,37 +206,18 @@ class User {
   }
 
   /**
-   * Remove a sub-user (deletes the relationship and the user account)
-   * @param {string} subUserId - Sub-user UUID to remove
-   * @returns {Promise<boolean>} True if sub-user was removed
+   * Remove a sub-user relationship (only unlinks the sub-user, keeps the user account)
+   * @param {string} subUserId - Sub-user UUID to unlink
+   * @returns {Promise<boolean>} True if sub-user relationship was removed
    */
   static async removeSubUser(subUserId) {
-    const client = await pool.connect();
+    const query = 'DELETE FROM sub_users WHERE sub_user_id = $1 RETURNING sub_user_id';
     
     try {
-      await client.query('BEGIN');
-
-      // First, delete the sub-user relationship
-      const subUserQuery = 'DELETE FROM sub_users WHERE sub_user_id = $1 RETURNING sub_user_id';
-      const subUserResult = await client.query(subUserQuery, [subUserId]);
-
-      if (subUserResult.rowCount === 0) {
-        await client.query('ROLLBACK');
-        return false;
-      }
-
-      // Then, delete the user account (cascade will handle related data)
-      const userQuery = 'DELETE FROM users WHERE id = $1 RETURNING id';
-      const userResult = await client.query(userQuery, [subUserId]);
-
-      await client.query('COMMIT');
-
-      return userResult.rowCount > 0;
+      const result = await pool.query(query, [subUserId]);
+      return result.rowCount > 0;
     } catch (error) {
-      await client.query('ROLLBACK');
       throw error;
-    } finally {
-      client.release();
     }
   }
 
