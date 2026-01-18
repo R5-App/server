@@ -509,18 +509,18 @@ const removeSubUser = async (req, res) => {
       });
     }
 
-    // Remove the sub-user
+    // Remove the sub-user linking (keeps the user account intact)
     const removed = await User.removeSubUser(subUserId);
 
     if (removed) {
       return res.status(200).json({
         success: true,
-        message: 'Sub-user removed successfully'
+        message: 'Sub-user linking removed successfully. The user account remains active.'
       });
     } else {
       return res.status(500).json({
         success: false,
-        message: 'Failed to remove sub-user'
+        message: 'Failed to remove sub-user linking'
       });
     }
   } catch (error) {

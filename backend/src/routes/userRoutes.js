@@ -50,7 +50,7 @@ router.get('/sub-users', authenticateToken, getSubUsers);
 
 /**
  * @route   DELETE /api/auth/sub-user/:subUserId
- * @desc    Remove a sub-user account
+ * @desc    Remove a sub-user linking (unlinks sub-user from parent, keeps the user account)
  * @access  Private (sub-user themselves, parent account owner, or admin)
  */
 router.delete('/sub-user/:subUserId', authenticateToken, removeSubUser);
