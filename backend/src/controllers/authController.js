@@ -89,6 +89,89 @@ const register = async (req, res) => {
 };
 
 /**
+ * Update user's email
+ * @route PUT /api/auth/email
+ */
+const updateEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const requestingUserId = req.user.userId;
+
+    // Validate email
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email format'
+      });
+    }
+
+    // Check if email is already in use by another user
+    const existingUser = await User.findByEmail(email);
+    if (existingUser && existingUser.id !== requestingUserId) {
+      return res.status(409).json({
+        success: false,
+        message: 'Email already in use'
+      });
+    }
+
+    // Update the user's email
+    const updatedUser = await User.updateEmail(requestingUserId, email);
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Generate new token with updated email
+    const token = generateToken({
+      userId: updatedUser.id,
+      email: updatedUser.email,
+      username: updatedUser.username
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Email updated successfully',
+      data: {
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          username: updatedUser.username,
+          name: updatedUser.name
+        },
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Email update error:', error);
+
+    // Handle database constraint errors
+    if (error.code === '23505' && error.constraint === 'users_email_key') {
+      return res.status(409).json({
+        success: false,
+        message: 'Email already in use'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update email. Please try again later.'
+    });
+  }
+};
+
+/**
  * Login user
  * @route POST /api/auth/login
  */
@@ -538,6 +621,7 @@ module.exports = {
   login,
   logout,
   deleteAccount,
+  updateEmail,
   registerSubUser,
   getSubUsers,
   removeSubUser

@@ -101,6 +101,28 @@ class User {
   }
 
   /**
+   * Update user's email
+   * @param {string} userId - User ID (UUID)
+   * @param {string} newEmail - New email address
+   * @returns {Promise<object>} Updated user
+   */
+  static async updateEmail(userId, newEmail) {
+    const query = `
+      UPDATE users 
+      SET email = $1 
+      WHERE id = $2 
+      RETURNING id, email, username, name, created_at
+    `;
+    
+    try {
+      const result = await pool.query(query, [newEmail, userId]);
+      return result.rows[0];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Create a sub-user linked to a parent account
    * @param {object} userData - Sub-user data
    * @param {string} parentUserId - Parent user UUID
