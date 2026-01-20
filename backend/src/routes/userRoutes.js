@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, logout, deleteAccount, registerSubUser, getSubUsers, removeSubUser } = require('../controllers/authController');
+const { register, login, logout, deleteAccount, updateEmail, updatePassword, registerSubUser, getSubUsers, removeSubUser } = require('../controllers/authController');
 const validateRegistration = require('../middleware/validateRegistration');
 const validateLogin = require('../middleware/validateLogin');
 const validateSubUserRegistration = require('../middleware/validateSubUserRegistration');
@@ -26,6 +26,20 @@ router.post('/login', validateLogin, login);
  * @access  Private (authenticated user)
  */
 router.post('/logout', authenticateToken, logout);
+
+/**
+ * @route   PUT /api/auth/email
+ * @desc    Update user's email address
+ * @access  Private (authenticated user - self only)
+ */
+router.put('/email', authenticateToken, updateEmail);
+
+/**
+ * @route   PUT /api/auth/password
+ * @desc    Update user's password
+ * @access  Private (authenticated user - self only)
+ */
+router.put('/password', authenticateToken, updatePassword);
 
 /**
  * @route   DELETE /api/auth/account/:userId

@@ -89,6 +89,176 @@ const register = async (req, res) => {
 };
 
 /**
+ * Update user's password
+ * @route PUT /api/auth/password
+ */
+const updatePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const requestingUserId = req.user.userId;
+
+    // Validate inputs
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Old password and new password are required'
+      });
+    }
+
+    // Validate new password strength
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 8 characters long'
+      });
+    }
+
+    // Get user with password hash
+    const user = await User.findByIdWithPassword(requestingUserId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify old password
+    const isOldPasswordValid = await comparePassword(oldPassword, user.password_hash);
+    if (!isOldPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Check if new password is same as old password
+    if (oldPassword === newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be different from current password'
+      });
+    }
+
+    // Hash new password
+    const newPasswordHash = await hashPassword(newPassword);
+
+    // Update password
+    const updatedUser = await User.updatePassword(requestingUserId, newPasswordHash);
+
+    if (!updatedUser) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update password'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Password updated successfully',
+      data: {
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          username: updatedUser.username,
+          name: updatedUser.name
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Password update error:', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update password. Please try again later.'
+    });
+  }
+};
+
+/**
+ * Update user's email
+ * @route PUT /api/auth/email
+ */
+const updateEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const requestingUserId = req.user.userId;
+
+    // Validate email
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email format'
+      });
+    }
+
+    // Check if email is already in use by another user
+    const existingUser = await User.findByEmail(email);
+    if (existingUser && existingUser.id !== requestingUserId) {
+      return res.status(409).json({
+        success: false,
+        message: 'Email already in use'
+      });
+    }
+
+    // Update the user's email
+    const updatedUser = await User.updateEmail(requestingUserId, email);
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Generate new token with updated email
+    const token = generateToken({
+      userId: updatedUser.id,
+      email: updatedUser.email,
+      username: updatedUser.username
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Email updated successfully',
+      data: {
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          username: updatedUser.username,
+          name: updatedUser.name
+        },
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Email update error:', error);
+
+    // Handle database constraint errors
+    if (error.code === '23505' && error.constraint === 'users_email_key') {
+      return res.status(409).json({
+        success: false,
+        message: 'Email already in use'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update email. Please try again later.'
+    });
+  }
+};
+
+/**
  * Login user
  * @route POST /api/auth/login
  */
@@ -538,6 +708,8 @@ module.exports = {
   login,
   logout,
   deleteAccount,
+  updateEmail,
+  updatePassword,
   registerSubUser,
   getSubUsers,
   removeSubUser

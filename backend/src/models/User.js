@@ -70,6 +70,22 @@ class User {
   }
 
   /**
+   * Find user by ID with password hash (for authentication)
+   * @param {string} id - User ID (UUID)
+   * @returns {Promise<object|null>} User object with password_hash or null
+   */
+  static async findByIdWithPassword(id) {
+    const query = 'SELECT id, email, username, name, password_hash, created_at, last_activity FROM users WHERE id = $1';
+    
+    try {
+      const result = await pool.query(query, [id]);
+      return result.rows[0] || null;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Update user's last activity timestamp
    * @param {string} userId - User ID
    * @returns {Promise<void>}
@@ -95,6 +111,50 @@ class User {
     try {
       const result = await pool.query(query, [userId]);
       return result.rowCount > 0;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Update user's email
+   * @param {string} userId - User ID (UUID)
+   * @param {string} newEmail - New email address
+   * @returns {Promise<object>} Updated user
+   */
+  static async updateEmail(userId, newEmail) {
+    const query = `
+      UPDATE users 
+      SET email = $1 
+      WHERE id = $2 
+      RETURNING id, email, username, name, created_at
+    `;
+    
+    try {
+      const result = await pool.query(query, [newEmail, userId]);
+      return result.rows[0];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Update user's password
+   * @param {string} userId - User ID (UUID)
+   * @param {string} newPasswordHash - New password hash
+   * @returns {Promise<object>} Updated user
+   */
+  static async updatePassword(userId, newPasswordHash) {
+    const query = `
+      UPDATE users 
+      SET password_hash = $1 
+      WHERE id = $2 
+      RETURNING id, email, username, name, created_at
+    `;
+    
+    try {
+      const result = await pool.query(query, [newPasswordHash, userId]);
+      return result.rows[0];
     } catch (error) {
       throw error;
     }
