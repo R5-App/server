@@ -161,7 +161,8 @@ const updatePassword = async (req, res) => {
           id: updatedUser.id,
           email: updatedUser.email,
           username: updatedUser.username,
-          name: updatedUser.name
+          name: updatedUser.name,
+          createdAt: updatedUser.created_at
         }
       }
     });
@@ -235,7 +236,8 @@ const updateEmail = async (req, res) => {
           id: updatedUser.id,
           email: updatedUser.email,
           username: updatedUser.username,
-          name: updatedUser.name
+          name: updatedUser.name,
+          createdAt: updatedUser.created_at
         },
         token
       }
