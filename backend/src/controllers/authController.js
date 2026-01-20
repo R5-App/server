@@ -381,6 +381,7 @@ const logout = async (req, res) => {
 const deleteAccount = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { password } = req.body;
     const requestingUserId = req.user.userId;
 
     // Check if user is deleting their own account
@@ -392,8 +393,16 @@ const deleteAccount = async (req, res) => {
       });
     }
 
-    // Check if user exists
-    const user = await User.findById(userId);
+    // Validate password is provided
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is required to delete your account'
+      });
+    }
+
+    // Check if user exists and get password hash
+    const user = await User.findByIdWithPassword(userId);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -401,34 +410,12 @@ const deleteAccount = async (req, res) => {
       });
     }
 
-    // Check authorization: user themselves, parent account, or admin
-    let isAuthorized = false;
-
-    // Case 1: User is deleting their own account
-    if (userId === requestingUserId) {
-      isAuthorized = true;
-    }
-
-    // Case 2: Parent user is deleting their sub-user
-    if (!isAuthorized) {
-      const parentInfo = await User.getParentUser(userId);
-      if (parentInfo && parentInfo.id === requestingUserId) {
-        isAuthorized = true;
-      }
-    }
-
-    // Case 3: Admin user is deleting any account
-    if (!isAuthorized) {
-      const isAdmin = await User.isAdmin(requestingUserId);
-      if (isAdmin) {
-        isAuthorized = true;
-      }
-    }
-
-    if (!isAuthorized) {
-      return res.status(403).json({
+    // Verify password
+    const isPasswordValid = await comparePassword(password, user.password_hash);
+    if (!isPasswordValid) {
+      return res.status(401).json({
         success: false,
-        message: 'You do not have permission to delete this account'
+        message: 'Incorrect password'
       });
     }
 
