@@ -49,9 +49,9 @@ const validateSubUserRegistration = (req, res, next) => {
     errors.push('Name must not exceed 100 characters');
   }
 
-  // Validate role (optional, defaults to 'member')
-  if (role && !['member', 'admin', 'viewer'].includes(role)) {
-    errors.push('Role must be one of: member, admin, viewer');
+  // Validate role (optional, defaults to 'hoitaja')
+  if (role && !['omistaja', 'hoitaja'].includes(role)) {
+    errors.push('Role must be either "omistaja" or "hoitaja"');
   }
 
   // If there are validation errors, return them
@@ -69,7 +69,7 @@ const validateSubUserRegistration = (req, res, next) => {
   if (name) {
     req.body.name = name.trim();
   }
-  req.body.role = role || 'member';
+  req.body.role = role || 'hoitaja';
 
   next();
 };
