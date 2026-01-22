@@ -692,6 +692,80 @@ const removeSubUser = async (req, res) => {
   }
 };
 
+/**
+ * Update the role of a sub-user
+ * @route PUT /api/auth/sub-user/:subUserId/role
+ */
+const updateSubUserRole = async (req, res) => {
+  try {
+    const { subUserId } = req.params;
+    const { role } = req.body;
+    const requestingUserId = req.user.userId;
+
+    // Verify sub-user exists
+    const subUser = await User.findById(subUserId);
+    if (!subUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Sub-user not found'
+      });
+    }
+
+    // Verify the user is actually a sub-user
+    const isSubUser = await User.isSubUser(subUserId);
+    if (!isSubUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User is not a sub-user'
+      });
+    }
+
+    // Check if requesting user is the parent of this sub-user
+    const parentInfo = await User.getParentUser(subUserId);
+    if (!parentInfo || parentInfo.id !== requestingUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to update this sub-user\'s role'
+      });
+    }
+
+    // Update the sub-user role
+    const updatedSubUser = await User.updateSubUserRole(subUserId, role);
+
+    if (!updatedSubUser) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update sub-user role'
+      });
+    }
+
+    // Get full user details
+    const updatedUserDetails = await User.findById(subUserId);
+
+    res.status(200).json({
+      success: true,
+      message: 'Sub-user role updated successfully',
+      data: {
+        user: {
+          id: updatedUserDetails.id,
+          email: updatedUserDetails.email,
+          username: updatedUserDetails.username,
+          name: updatedUserDetails.name,
+          role: updatedSubUser.role,
+          parentUserId: updatedSubUser.parent_user_id
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Update sub-user role error:', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update sub-user role. Please try again later.'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -701,5 +775,6 @@ module.exports = {
   updatePassword,
   registerSubUser,
   getSubUsers,
-  removeSubUser
+  removeSubUser,
+  updateSubUserRole
 };

@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, logout, deleteAccount, updateEmail, updatePassword, registerSubUser, getSubUsers, removeSubUser } = require('../controllers/authController');
+const { register, login, logout, deleteAccount, updateEmail, updatePassword, registerSubUser, getSubUsers, removeSubUser, updateSubUserRole } = require('../controllers/authController');
 const validateRegistration = require('../middleware/validateRegistration');
 const validateLogin = require('../middleware/validateLogin');
 const validateSubUserRegistration = require('../middleware/validateSubUserRegistration');
+const validateSubUserRoleUpdate = require('../middleware/validateSubUserRoleUpdate');
 const authenticateToken = require('../middleware/authenticateToken');
 
 /**
@@ -68,5 +69,12 @@ router.get('/sub-users', authenticateToken, getSubUsers);
  * @access  Private (sub-user themselves, parent account owner, or admin)
  */
 router.delete('/sub-user/:subUserId', authenticateToken, removeSubUser);
+
+/**
+ * @route   PUT /api/auth/sub-user/:subUserId/role
+ * @desc    Update the role of a sub-user
+ * @access  Private (parent account owner only)
+ */
+router.put('/sub-user/:subUserId/role', authenticateToken, validateSubUserRoleUpdate, updateSubUserRole);
 
 module.exports = router;
