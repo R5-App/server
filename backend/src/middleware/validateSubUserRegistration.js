@@ -64,7 +64,7 @@ const validateSubUserRegistration = (req, res, next) => {
   }
 
   // Sanitize inputs
-  req.body.email = validator.normalizeEmail(email);
+  req.body.email = validator.normalizeEmail(email, { gmail_remove_dots: false });
   req.body.username = username.trim();
   if (name) {
     req.body.name = name.trim();
