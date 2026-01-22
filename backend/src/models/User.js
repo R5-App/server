@@ -296,6 +296,28 @@ class User {
       throw error;
     }
   }
+
+  /**
+   * Update the role of a sub-user
+   * @param {string} subUserId - Sub-user UUID
+   * @param {string} newRole - New role value
+   * @returns {Promise<object>} Updated sub-user info
+   */
+  static async updateSubUserRole(subUserId, newRole) {
+    const query = `
+      UPDATE sub_users
+      SET role = $1
+      WHERE sub_user_id = $2
+      RETURNING parent_user_id, sub_user_id, role
+    `;
+    
+    try {
+      const result = await pool.query(query, [newRole, subUserId]);
+      return result.rows[0] || null;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 module.exports = User;
