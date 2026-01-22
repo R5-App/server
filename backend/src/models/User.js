@@ -164,10 +164,10 @@ class User {
    * Create a sub-user linked to a parent account
    * @param {object} userData - Sub-user data
    * @param {string} parentUserId - Parent user UUID
-   * @param {string} role - Sub-user role (member, admin, viewer)
+   * @param {string} role - Sub-user role (omistaja, hoitaja)
    * @returns {Promise<object>} Created sub-user with relationship
    */
-  static async createSubUser({ email, username, name, passwordHash }, parentUserId, role = 'member') {
+  static async createSubUser({ email, username, name, passwordHash }, parentUserId, role = 'hoitaja') {
     const client = await pool.connect();
     
     try {
