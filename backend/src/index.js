@@ -7,6 +7,7 @@ require('dotenv').config();
 // Import routes
 const userRoutes = require('./routes/userRoutes');
 const petRoutes = require('./routes/petRoutes');
+const medicationRoutes = require('./routes/medicationRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -64,6 +65,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authLimiter, userRoutes);
 app.use('/api/pets', authLimiter, petRoutes);
+app.use('/api/medications', authLimiter, medicationRoutes);
 
 // 404 handler
 app.use((req, res) => {
