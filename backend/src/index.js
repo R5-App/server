@@ -8,6 +8,7 @@ require('dotenv').config();
 const userRoutes = require('./routes/userRoutes');
 const petRoutes = require('./routes/petRoutes');
 const medicationRoutes = require('./routes/medicationRoutes');
+const vaccinationRoutes = require('./routes/vaccinationRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -66,6 +67,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authLimiter, userRoutes);
 app.use('/api/pets', authLimiter, petRoutes);
 app.use('/api/medications', authLimiter, medicationRoutes);
+app.use('/api/vaccinations', authLimiter, vaccinationRoutes);
 
 // 404 handler
 app.use((req, res) => {
