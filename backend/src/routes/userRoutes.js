@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, logout, deleteAccount, registerSubUser, getSubUsers, removeSubUser } = require('../controllers/authController');
+const { register, login, logout, deleteAccount, updateEmail, updatePassword, registerSubUser, getSubUsers, removeSubUser, updateSubUserRole } = require('../controllers/authController');
 const validateRegistration = require('../middleware/validateRegistration');
 const validateLogin = require('../middleware/validateLogin');
 const validateSubUserRegistration = require('../middleware/validateSubUserRegistration');
+const validateSubUserRoleUpdate = require('../middleware/validateSubUserRoleUpdate');
 const authenticateToken = require('../middleware/authenticateToken');
 
 /**
@@ -28,6 +29,20 @@ router.post('/login', validateLogin, login);
 router.post('/logout', authenticateToken, logout);
 
 /**
+ * @route   PUT /api/auth/email
+ * @desc    Update user's email address
+ * @access  Private (authenticated user - self only)
+ */
+router.put('/email', authenticateToken, updateEmail);
+
+/**
+ * @route   PUT /api/auth/password
+ * @desc    Update user's password
+ * @access  Private (authenticated user - self only)
+ */
+router.put('/password', authenticateToken, updatePassword);
+
+/**
  * @route   DELETE /api/auth/account/:userId
  * @desc    Delete user account
  * @access  Private (authenticated user)
@@ -50,9 +65,16 @@ router.get('/sub-users', authenticateToken, getSubUsers);
 
 /**
  * @route   DELETE /api/auth/sub-user/:subUserId
- * @desc    Remove a sub-user account
+ * @desc    Remove a sub-user linking (unlinks sub-user from parent, keeps the user account)
  * @access  Private (sub-user themselves, parent account owner, or admin)
  */
 router.delete('/sub-user/:subUserId', authenticateToken, removeSubUser);
+
+/**
+ * @route   PUT /api/auth/sub-user/:subUserId/role
+ * @desc    Update the role of a sub-user
+ * @access  Private (parent account owner only)
+ */
+router.put('/sub-user/:subUserId/role', authenticateToken, validateSubUserRoleUpdate, updateSubUserRole);
 
 module.exports = router;

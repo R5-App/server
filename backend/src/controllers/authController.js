@@ -89,6 +89,178 @@ const register = async (req, res) => {
 };
 
 /**
+ * Update user's password
+ * @route PUT /api/auth/password
+ */
+const updatePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const requestingUserId = req.user.userId;
+
+    // Validate inputs
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Old password and new password are required'
+      });
+    }
+
+    // Validate new password strength
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 8 characters long'
+      });
+    }
+
+    // Get user with password hash
+    const user = await User.findByIdWithPassword(requestingUserId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify old password
+    const isOldPasswordValid = await comparePassword(oldPassword, user.password_hash);
+    if (!isOldPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Check if new password is same as old password
+    if (oldPassword === newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be different from current password'
+      });
+    }
+
+    // Hash new password
+    const newPasswordHash = await hashPassword(newPassword);
+
+    // Update password
+    const updatedUser = await User.updatePassword(requestingUserId, newPasswordHash);
+
+    if (!updatedUser) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update password'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Password updated successfully',
+      data: {
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          username: updatedUser.username,
+          name: updatedUser.name,
+          createdAt: updatedUser.created_at
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Password update error:', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update password. Please try again later.'
+    });
+  }
+};
+
+/**
+ * Update user's email
+ * @route PUT /api/auth/email
+ */
+const updateEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const requestingUserId = req.user.userId;
+
+    // Validate email
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email format'
+      });
+    }
+
+    // Check if email is already in use by another user
+    const existingUser = await User.findByEmail(email);
+    if (existingUser && existingUser.id !== requestingUserId) {
+      return res.status(409).json({
+        success: false,
+        message: 'Email already in use'
+      });
+    }
+
+    // Update the user's email
+    const updatedUser = await User.updateEmail(requestingUserId, email);
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Generate new token with updated email
+    const token = generateToken({
+      userId: updatedUser.id,
+      email: updatedUser.email,
+      username: updatedUser.username
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Email updated successfully',
+      data: {
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          username: updatedUser.username,
+          name: updatedUser.name,
+          createdAt: updatedUser.created_at
+        },
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Email update error:', error);
+
+    // Handle database constraint errors
+    if (error.code === '23505' && error.constraint === 'users_email_key') {
+      return res.status(409).json({
+        success: false,
+        message: 'Email already in use'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update email. Please try again later.'
+    });
+  }
+};
+
+/**
  * Login user
  * @route POST /api/auth/login
  */
@@ -209,6 +381,7 @@ const logout = async (req, res) => {
 const deleteAccount = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { password } = req.body;
     const requestingUserId = req.user.userId;
 
     // Check if user is deleting their own account
@@ -220,8 +393,16 @@ const deleteAccount = async (req, res) => {
       });
     }
 
-    // Check if user exists
-    const user = await User.findById(userId);
+    // Validate password is provided
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is required to delete your account'
+      });
+    }
+
+    // Check if user exists and get password hash
+    const user = await User.findByIdWithPassword(userId);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -229,34 +410,12 @@ const deleteAccount = async (req, res) => {
       });
     }
 
-    // Check authorization: user themselves, parent account, or admin
-    let isAuthorized = false;
-
-    // Case 1: User is deleting their own account
-    if (userId === requestingUserId) {
-      isAuthorized = true;
-    }
-
-    // Case 2: Parent user is deleting their sub-user
-    if (!isAuthorized) {
-      const parentInfo = await User.getParentUser(userId);
-      if (parentInfo && parentInfo.id === requestingUserId) {
-        isAuthorized = true;
-      }
-    }
-
-    // Case 3: Admin user is deleting any account
-    if (!isAuthorized) {
-      const isAdmin = await User.isAdmin(requestingUserId);
-      if (isAdmin) {
-        isAuthorized = true;
-      }
-    }
-
-    if (!isAuthorized) {
-      return res.status(403).json({
+    // Verify password
+    const isPasswordValid = await comparePassword(password, user.password_hash);
+    if (!isPasswordValid) {
+      return res.status(401).json({
         success: false,
-        message: 'You do not have permission to delete this account'
+        message: 'Incorrect password'
       });
     }
 
@@ -509,18 +668,18 @@ const removeSubUser = async (req, res) => {
       });
     }
 
-    // Remove the sub-user
+    // Remove the sub-user linking (keeps the user account intact)
     const removed = await User.removeSubUser(subUserId);
 
     if (removed) {
       return res.status(200).json({
         success: true,
-        message: 'Sub-user removed successfully'
+        message: 'Sub-user linking removed successfully. The user account remains active.'
       });
     } else {
       return res.status(500).json({
         success: false,
-        message: 'Failed to remove sub-user'
+        message: 'Failed to remove sub-user linking'
       });
     }
   } catch (error) {
@@ -533,12 +692,89 @@ const removeSubUser = async (req, res) => {
   }
 };
 
+/**
+ * Update the role of a sub-user
+ * @route PUT /api/auth/sub-user/:subUserId/role
+ */
+const updateSubUserRole = async (req, res) => {
+  try {
+    const { subUserId } = req.params;
+    const { role } = req.body;
+    const requestingUserId = req.user.userId;
+
+    // Verify sub-user exists
+    const subUser = await User.findById(subUserId);
+    if (!subUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Sub-user not found'
+      });
+    }
+
+    // Verify the user is actually a sub-user
+    const isSubUser = await User.isSubUser(subUserId);
+    if (!isSubUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User is not a sub-user'
+      });
+    }
+
+    // Check if requesting user is the parent of this sub-user
+    const parentInfo = await User.getParentUser(subUserId);
+    if (!parentInfo || parentInfo.id !== requestingUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to update this sub-user\'s role'
+      });
+    }
+
+    // Update the sub-user role
+    const updatedSubUser = await User.updateSubUserRole(subUserId, role);
+
+    if (!updatedSubUser) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update sub-user role'
+      });
+    }
+
+    // Get full user details
+    const updatedUserDetails = await User.findById(subUserId);
+
+    res.status(200).json({
+      success: true,
+      message: 'Sub-user role updated successfully',
+      data: {
+        user: {
+          id: updatedUserDetails.id,
+          email: updatedUserDetails.email,
+          username: updatedUserDetails.username,
+          name: updatedUserDetails.name,
+          role: updatedSubUser.role,
+          parentUserId: updatedSubUser.parent_user_id
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Update sub-user role error:', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update sub-user role. Please try again later.'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   logout,
   deleteAccount,
+  updateEmail,
+  updatePassword,
   registerSubUser,
   getSubUsers,
-  removeSubUser
+  removeSubUser,
+  updateSubUserRole
 };

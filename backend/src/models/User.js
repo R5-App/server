@@ -70,6 +70,22 @@ class User {
   }
 
   /**
+   * Find user by ID with password hash (for authentication)
+   * @param {string} id - User ID (UUID)
+   * @returns {Promise<object|null>} User object with password_hash or null
+   */
+  static async findByIdWithPassword(id) {
+    const query = 'SELECT id, email, username, name, password_hash, created_at, last_activity FROM users WHERE id = $1';
+    
+    try {
+      const result = await pool.query(query, [id]);
+      return result.rows[0] || null;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Update user's last activity timestamp
    * @param {string} userId - User ID
    * @returns {Promise<void>}
@@ -101,13 +117,57 @@ class User {
   }
 
   /**
+   * Update user's email
+   * @param {string} userId - User ID (UUID)
+   * @param {string} newEmail - New email address
+   * @returns {Promise<object>} Updated user
+   */
+  static async updateEmail(userId, newEmail) {
+    const query = `
+      UPDATE users 
+      SET email = $1 
+      WHERE id = $2 
+      RETURNING id, email, username, name, created_at
+    `;
+    
+    try {
+      const result = await pool.query(query, [newEmail, userId]);
+      return result.rows[0];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Update user's password
+   * @param {string} userId - User ID (UUID)
+   * @param {string} newPasswordHash - New password hash
+   * @returns {Promise<object>} Updated user
+   */
+  static async updatePassword(userId, newPasswordHash) {
+    const query = `
+      UPDATE users 
+      SET password_hash = $1 
+      WHERE id = $2 
+      RETURNING id, email, username, name, created_at
+    `;
+    
+    try {
+      const result = await pool.query(query, [newPasswordHash, userId]);
+      return result.rows[0];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Create a sub-user linked to a parent account
    * @param {object} userData - Sub-user data
    * @param {string} parentUserId - Parent user UUID
-   * @param {string} role - Sub-user role (member, admin, viewer)
+   * @param {string} role - Sub-user role (omistaja, hoitaja)
    * @returns {Promise<object>} Created sub-user with relationship
    */
-  static async createSubUser({ email, username, name, passwordHash }, parentUserId, role = 'member') {
+  static async createSubUser({ email, username, name, passwordHash }, parentUserId, role = 'hoitaja') {
     const client = await pool.connect();
     
     try {
@@ -206,37 +266,18 @@ class User {
   }
 
   /**
-   * Remove a sub-user (deletes the relationship and the user account)
-   * @param {string} subUserId - Sub-user UUID to remove
-   * @returns {Promise<boolean>} True if sub-user was removed
+   * Remove a sub-user relationship (only unlinks the sub-user, keeps the user account)
+   * @param {string} subUserId - Sub-user UUID to unlink
+   * @returns {Promise<boolean>} True if sub-user relationship was removed
    */
   static async removeSubUser(subUserId) {
-    const client = await pool.connect();
+    const query = 'DELETE FROM sub_users WHERE sub_user_id = $1 RETURNING sub_user_id';
     
     try {
-      await client.query('BEGIN');
-
-      // First, delete the sub-user relationship
-      const subUserQuery = 'DELETE FROM sub_users WHERE sub_user_id = $1 RETURNING sub_user_id';
-      const subUserResult = await client.query(subUserQuery, [subUserId]);
-
-      if (subUserResult.rowCount === 0) {
-        await client.query('ROLLBACK');
-        return false;
-      }
-
-      // Then, delete the user account (cascade will handle related data)
-      const userQuery = 'DELETE FROM users WHERE id = $1 RETURNING id';
-      const userResult = await client.query(userQuery, [subUserId]);
-
-      await client.query('COMMIT');
-
-      return userResult.rowCount > 0;
+      const result = await pool.query(query, [subUserId]);
+      return result.rowCount > 0;
     } catch (error) {
-      await client.query('ROLLBACK');
       throw error;
-    } finally {
-      client.release();
     }
   }
 
@@ -251,6 +292,28 @@ class User {
     try {
       const result = await pool.query(query, [userId]);
       return result.rows[0] && result.rows[0].admin_perms > 0;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Update the role of a sub-user
+   * @param {string} subUserId - Sub-user UUID
+   * @param {string} newRole - New role value
+   * @returns {Promise<object>} Updated sub-user info
+   */
+  static async updateSubUserRole(subUserId, newRole) {
+    const query = `
+      UPDATE sub_users
+      SET role = $1
+      WHERE sub_user_id = $2
+      RETURNING parent_user_id, sub_user_id, role
+    `;
+    
+    try {
+      const result = await pool.query(query, [newRole, subUserId]);
+      return result.rows[0] || null;
     } catch (error) {
       throw error;
     }
