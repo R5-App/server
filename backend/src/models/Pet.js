@@ -54,6 +54,27 @@ class Pet {
             throw error;
         }
     }
+
+    /**
+     * Get all pets for a specific owner
+     * @param {string} ownerId - Owner user ID (UUID)
+     * @returns {Promise<Array>} Array of pets
+     */
+    static async getAllByOwnerId(ownerId) {
+        const query = `
+            SELECT id, owner_id, name, type, breed, sex, birthdate, notes, created_at
+            FROM pets
+            WHERE owner_id = $1
+            ORDER BY created_at DESC
+        `;
+
+        try {
+            const result = await pool.query(query, [ownerId]);
+            return result.rows;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 
