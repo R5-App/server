@@ -50,9 +50,11 @@ class VetVisit {
      */
     static async getAllByUserId(userId) {
         const query = `
-            SELECT vv.*, p.name as pet_name, p.type as pet_type
+            SELECT vv.*, p.name as pet_name, p.type as pet_type, 
+                   vvt.name as type_name
             FROM vet_visits vv
             JOIN pets p ON vv.pet_id = p.id
+            LEFT JOIN vet_visit_types vvt ON vv.type_id = vvt.id
             WHERE p.owner_id = $1
             ORDER BY p.name, vv.visit_date DESC
         `;
