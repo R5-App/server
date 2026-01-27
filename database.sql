@@ -63,6 +63,16 @@ CREATE TABLE IF NOT EXISTS public.pet_vaccination
     CONSTRAINT pet_vaccination_pkey PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS public.pet_weights
+(
+    id serial NOT NULL,
+    pet_id integer NOT NULL,
+    weight numeric(6, 2) NOT NULL,
+    date date NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pet_weights_pkey PRIMARY KEY (id)
+);
+
 CREATE TABLE IF NOT EXISTS public.pets
 (
     id serial NOT NULL,
@@ -94,7 +104,7 @@ CREATE TABLE IF NOT EXISTS public.sub_users
 (
     parent_user_id uuid NOT NULL,
     sub_user_id uuid NOT NULL,
-    role text COLLATE pg_catalog."default" NOT NULL DEFAULT 'member'::text,
+    role text COLLATE pg_catalog."default" NOT NULL DEFAULT 'hoitaja'::text,
     created_at timestamp without time zone DEFAULT now(),
     CONSTRAINT sub_users_pkey PRIMARY KEY (parent_user_id, sub_user_id),
     CONSTRAINT sub_users_sub_user_id_key UNIQUE (sub_user_id)
@@ -176,6 +186,13 @@ ALTER TABLE IF EXISTS public.pet_medication
 
 ALTER TABLE IF EXISTS public.pet_vaccination
     ADD CONSTRAINT pet_vaccination_pet_id_fkey FOREIGN KEY (pet_id)
+    REFERENCES public.pets (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.pet_weights
+    ADD CONSTRAINT fk_pet FOREIGN KEY (pet_id)
     REFERENCES public.pets (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
