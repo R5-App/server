@@ -53,7 +53,7 @@ const getUserPetVetVisits = async (req, res) => {
                 id: visit.id,
                 vet_name: visit.vet_name,
                 location: visit.location,
-                type_id: visit.type_id,
+                type_id: visit.type_name || 'Unknown',
                 visit_date: visit.visit_date,
                 notes: visit.notes,
                 costs: visit.costs
