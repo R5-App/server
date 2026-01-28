@@ -42,7 +42,7 @@ const limiter = rateLimit({
 // Rate limiting for auth routes (still protects against brute force but allows legitimate retries)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // limit each IP to 20 authentication attempts per windowMs
+  max: 100, // limit each IP to 100 authentication attempts per windowMs
   message: 'Too many authentication attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
