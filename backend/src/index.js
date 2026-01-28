@@ -11,6 +11,7 @@ const medicationRoutes = require('./routes/medicationRoutes');
 const vaccinationRoutes = require('./routes/vaccinationRoutes');
 const vetVisitRoutes = require('./routes/vetVisitRoutes');
 const weightRoutes = require('./routes/weightRoutes');
+const routeRoutes = require('./routes/routeRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -72,6 +73,7 @@ app.use('/api/medications', authLimiter, medicationRoutes);
 app.use('/api/vaccinations', authLimiter, vaccinationRoutes);
 app.use('/api/vet-visits', authLimiter, vetVisitRoutes);
 app.use('/api/weights', authLimiter, weightRoutes);
+app.use('/api/routes', authLimiter, routeRoutes);
 
 // 404 handler
 app.use((req, res) => {

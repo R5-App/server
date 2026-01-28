@@ -100,6 +100,20 @@ CREATE TABLE IF NOT EXISTS public.route
     CONSTRAINT route_pkey PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS public.route_coordinates
+(
+    id serial NOT NULL,
+    route_id integer NOT NULL,
+    latitude double precision NOT NULL,
+    longitude double precision NOT NULL,
+    altitude double precision,
+    accuracy double precision,
+    timestamp timestamp with time zone NOT NULL,
+    speed_mps numeric(8, 3),
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT route_coordinates_pkey PRIMARY KEY (id)
+);
+
 CREATE TABLE IF NOT EXISTS public.sub_users
 (
     parent_user_id uuid NOT NULL,
@@ -217,6 +231,17 @@ ALTER TABLE IF EXISTS public.route
     REFERENCES public.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.route_coordinates
+    ADD CONSTRAINT route_coordinates_route_id_fkey FOREIGN KEY (route_id)
+    REFERENCES public.route (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS idx_route_coordinates_route_id
+    ON public.route_coordinates(route_id);
+CREATE INDEX IF NOT EXISTS idx_route_coordinates_timestamp
+    ON public.route_coordinates(timestamp);
 
 
 ALTER TABLE IF EXISTS public.sub_users
