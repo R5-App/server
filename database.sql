@@ -63,6 +63,16 @@ CREATE TABLE IF NOT EXISTS public.pet_vaccination
     CONSTRAINT pet_vaccination_pkey PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS public.pet_weights
+(
+    id serial NOT NULL,
+    pet_id integer NOT NULL,
+    weight numeric(6, 2) NOT NULL,
+    date date NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pet_weights_pkey PRIMARY KEY (id)
+);
+
 CREATE TABLE IF NOT EXISTS public.pets
 (
     id serial NOT NULL,
@@ -90,11 +100,25 @@ CREATE TABLE IF NOT EXISTS public.route
     CONSTRAINT route_pkey PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS public.route_coordinates
+(
+    id serial NOT NULL,
+    route_id integer NOT NULL,
+    latitude double precision NOT NULL,
+    longitude double precision NOT NULL,
+    altitude double precision,
+    accuracy double precision,
+    timestamp timestamp with time zone NOT NULL,
+    speed_mps numeric(8, 3),
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT route_coordinates_pkey PRIMARY KEY (id)
+);
+
 CREATE TABLE IF NOT EXISTS public.sub_users
 (
     parent_user_id uuid NOT NULL,
     sub_user_id uuid NOT NULL,
-    role text COLLATE pg_catalog."default" NOT NULL DEFAULT 'member'::text,
+    role text COLLATE pg_catalog."default" NOT NULL DEFAULT 'hoitaja'::text,
     created_at timestamp without time zone DEFAULT now(),
     CONSTRAINT sub_users_pkey PRIMARY KEY (parent_user_id, sub_user_id),
     CONSTRAINT sub_users_sub_user_id_key UNIQUE (sub_user_id)
@@ -181,6 +205,13 @@ ALTER TABLE IF EXISTS public.pet_vaccination
     ON DELETE CASCADE;
 
 
+ALTER TABLE IF EXISTS public.pet_weights
+    ADD CONSTRAINT fk_pet FOREIGN KEY (pet_id)
+    REFERENCES public.pets (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
 ALTER TABLE IF EXISTS public.pets
     ADD CONSTRAINT pets_owner_id_fkey FOREIGN KEY (owner_id)
     REFERENCES public.users (id) MATCH SIMPLE
@@ -200,6 +231,17 @@ ALTER TABLE IF EXISTS public.route
     REFERENCES public.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.route_coordinates
+    ADD CONSTRAINT route_coordinates_route_id_fkey FOREIGN KEY (route_id)
+    REFERENCES public.route (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS idx_route_coordinates_route_id
+    ON public.route_coordinates(route_id);
+CREATE INDEX IF NOT EXISTS idx_route_coordinates_timestamp
+    ON public.route_coordinates(timestamp);
 
 
 ALTER TABLE IF EXISTS public.sub_users
