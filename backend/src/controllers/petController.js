@@ -67,7 +67,68 @@ const addPet = async (req, res) => {
     }
 };
 
+/**
+ * Delete pet
+ * @route DELETE /api/pets/:petId
+ */
+const deletePet = async (req, res) => {
+    try {
+        // IF NEEDED: Use effectiveUserId for sub-user support (set by resolveEffectiveUser middleware)
+        // IN WHICH CASE YOU WOULD HAVE:
+        // const userId = req.effectiveUserId || req.user.userId; // and other edits might be needed in other files to implement this properly
+        // But if ONLY the pet owner can delete the pet, then:
+        const userId = req.user.userId;
+        const { petId } = req.params;
+
+        if (!petId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Pet ID required'
+            });
+        }
+
+        // fetch pet
+        const pet = await Pet.getById(petId);
+        if (!pet) {
+            return res.status(404).json({
+                success: false,
+                message: 'Pet not found'
+            });
+        }
+
+        // check if user owns the pet
+        if (pet.owner_id !== userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Unauthorized. Only pet owner can delete this pet'
+            });
+        }
+
+        // if user owns the pet, proceed to delete:
+        const deletedPet = await Pet.deleteById(petId);
+        if (!deletedPet) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to delete pet'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Pet deleted successfully',
+            data: pet
+        });
+    } catch (error) {
+        console.error('Delete pet error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to delete pet'
+        });
+    }
+};
+
 module.exports = {
     getUserPets,
-    addPet
+    addPet,
+    deletePet
 }

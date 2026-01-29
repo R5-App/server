@@ -39,6 +39,23 @@ class Pet {
     }
 
     /**
+     * Get pet by ID
+     * @param {string} petId - Pet ID
+     * @returns {Promise<object>} Pet object or undefined if not found
+     */
+    static async getById(petId) {
+        const query = 'SELECT * FROM pets WHERE id = $1';
+
+        try {
+            const result = await pool.query(query, [petId]);
+            return result.rows[0];
+        } catch (error) {
+            throw error;
+        }
+    }
+
+
+    /**
      * Verify if a pet belongs to a specific user
      * @param {number} petId - Pet ID
      * @param {string} userId - User ID (UUID)
