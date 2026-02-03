@@ -206,6 +206,37 @@ class User {
   }
 
   /**
+   * Link an existing user as a sub-user to a parent account
+   * @param {string} subUserId - Existing user UUID to link
+   * @param {string} parentUserId - Parent user UUID
+   * @param {string} role - Sub-user role (omistaja, hoitaja)
+   * @returns {Promise<object>} Linked sub-user with relationship
+   */
+  static async linkSubUser(subUserId, parentUserId, role = 'hoitaja') {
+    const query = `
+      INSERT INTO sub_users (parent_user_id, sub_user_id, role)
+      VALUES ($1, $2, $3)
+      RETURNING parent_user_id, sub_user_id, role, created_at
+    `;
+    
+    try {
+      const result = await pool.query(query, [parentUserId, subUserId, role]);
+      
+      // Get the linked user's details
+      const user = await this.findById(subUserId);
+      
+      return {
+        ...user,
+        parentUserId: result.rows[0].parent_user_id,
+        role: result.rows[0].role,
+        linkedAt: result.rows[0].created_at
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Get all sub-users for a parent account
    * @param {string} parentUserId - Parent user UUID
    * @returns {Promise<array>} Array of sub-users

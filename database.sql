@@ -51,6 +51,16 @@ CREATE TABLE IF NOT EXISTS public.pet_medication
     CONSTRAINT pet_medication_pkey PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS public.pet_users
+(
+    id serial NOT NULL,
+    pet_id integer NOT NULL,
+    user_id uuid NOT NULL,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT pet_users_pkey PRIMARY KEY (id),
+    CONSTRAINT pet_users_unique UNIQUE (pet_id, user_id)
+);
+
 CREATE TABLE IF NOT EXISTS public.pet_vaccination
 (
     id serial NOT NULL,
@@ -108,7 +118,7 @@ CREATE TABLE IF NOT EXISTS public.route_coordinates
     longitude double precision NOT NULL,
     altitude double precision,
     accuracy double precision,
-    timestamp timestamp with time zone NOT NULL,
+    "timestamp" timestamp with time zone NOT NULL,
     speed_mps numeric(8, 3),
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT route_coordinates_pkey PRIMARY KEY (id)
@@ -198,6 +208,24 @@ ALTER TABLE IF EXISTS public.pet_medication
     ON DELETE CASCADE;
 
 
+ALTER TABLE IF EXISTS public.pet_users
+    ADD CONSTRAINT pet_users_pet_id_fkey FOREIGN KEY (pet_id)
+    REFERENCES public.pets (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS idx_pet_users_pet_id
+    ON public.pet_users(pet_id);
+
+
+ALTER TABLE IF EXISTS public.pet_users
+    ADD CONSTRAINT pet_users_user_id_fkey FOREIGN KEY (user_id)
+    REFERENCES public.users (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS idx_pet_users_user_id
+    ON public.pet_users(user_id);
+
+
 ALTER TABLE IF EXISTS public.pet_vaccination
     ADD CONSTRAINT pet_vaccination_pet_id_fkey FOREIGN KEY (pet_id)
     REFERENCES public.pets (id) MATCH SIMPLE
@@ -240,8 +268,6 @@ ALTER TABLE IF EXISTS public.route_coordinates
     ON DELETE CASCADE;
 CREATE INDEX IF NOT EXISTS idx_route_coordinates_route_id
     ON public.route_coordinates(route_id);
-CREATE INDEX IF NOT EXISTS idx_route_coordinates_timestamp
-    ON public.route_coordinates(timestamp);
 
 
 ALTER TABLE IF EXISTS public.sub_users
