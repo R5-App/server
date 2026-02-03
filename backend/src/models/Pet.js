@@ -92,6 +92,82 @@ class Pet {
             throw error;
         }
     }
+
+    /**
+     * Get complete pet data with all related information
+     * @param {number} petId - Pet ID
+     * @returns {Promise<object>} Complete pet data including medications, vaccinations, weights, and vet visits
+     */
+    static async getCompleteDataById(petId) {
+        const client = await pool.connect();
+
+        try {
+            // Get pet basic info
+            const petQuery = `
+                SELECT id, owner_id, name, type, breed, sex, birthdate, notes, created_at,
+                       EXTRACT(YEAR FROM AGE(COALESCE(birthdate, CURRENT_DATE))) as age_years
+                FROM pets
+                WHERE id = $1
+            `;
+            const petResult = await client.query(petQuery, [petId]);
+            
+            if (petResult.rows.length === 0) {
+                return null;
+            }
+
+            const pet = petResult.rows[0];
+
+            // Get medications
+            const medicationsQuery = `
+                SELECT id, med_name, medication_date, expire_date, notes, costs
+                FROM pet_medication
+                WHERE pet_id = $1
+                ORDER BY medication_date DESC
+            `;
+            const medicationsResult = await client.query(medicationsQuery, [petId]);
+
+            // Get vaccinations
+            const vaccinationsQuery = `
+                SELECT id, vac_name, vaccination_date, expire_date, notes, costs
+                FROM pet_vaccination
+                WHERE pet_id = $1
+                ORDER BY vaccination_date DESC
+            `;
+            const vaccinationsResult = await client.query(vaccinationsQuery, [petId]);
+
+            // Get weights
+            const weightsQuery = `
+                SELECT id, weight, date, created_at
+                FROM pet_weights
+                WHERE pet_id = $1
+                ORDER BY date DESC
+            `;
+            const weightsResult = await client.query(weightsQuery, [petId]);
+
+            // Get vet visits
+            const vetVisitsQuery = `
+                SELECT vv.id, vv.vet_name, vv.location, vv.type_id, vv.visit_date, 
+                       vv.notes, vv.costs, vvt.name as type_name
+                FROM vet_visits vv
+                LEFT JOIN vet_visit_types vvt ON vv.type_id = vvt.id
+                WHERE vv.pet_id = $1
+                ORDER BY vv.visit_date DESC
+            `;
+            const vetVisitsResult = await client.query(vetVisitsQuery, [petId]);
+
+            return {
+                ...pet,
+                medications: medicationsResult.rows,
+                vaccinations: vaccinationsResult.rows,
+                weights: weightsResult.rows,
+                vetVisits: vetVisitsResult.rows
+            };
+        } catch (error) {
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
 }
 
 

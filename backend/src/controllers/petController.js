@@ -68,6 +68,55 @@ const addPet = async (req, res) => {
 };
 
 /**
+ * Get complete pet data with all related information
+ * @route GET /api/pets/:petId/complete
+ */
+const getCompletePetData = async (req, res) => {
+    try {
+        const userId = req.effectiveUserId || req.user.userId;
+        const { petId } = req.params;
+
+        if (!petId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Pet ID required'
+            });
+        }
+
+        // Verify pet belongs to user
+        const belongsToUser = await Pet.belongsToUser(petId, userId);
+        if (!belongsToUser) {
+            return res.status(404).json({
+                success: false,
+                message: 'Pet not found or access denied'
+            });
+        }
+
+        // Get complete pet data
+        const completePetData = await Pet.getCompleteDataById(petId);
+
+        if (!completePetData) {
+            return res.status(404).json({
+                success: false,
+                message: 'Pet not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Complete pet data retrieved successfully',
+            data: completePetData
+        });
+    } catch (error) {
+        console.error('Get complete pet data error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve complete pet data'
+        });
+    }
+};
+
+/**
  * Delete pet
  * @route DELETE /api/pets/:petId
  */
@@ -130,5 +179,6 @@ const deletePet = async (req, res) => {
 module.exports = {
     getUserPets,
     addPet,
-    deletePet
+    deletePet,
+    getCompletePetData
 }

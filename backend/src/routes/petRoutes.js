@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getUserPets, addPet, deletePet } = require('../controllers/petController');
+const { getUserPets, addPet, deletePet, getCompletePetData } = require('../controllers/petController');
 const authenticateToken = require('../middleware/authenticateToken');
 const resolveEffectiveUser = require('../middleware/resolveEffectiveUser');
 
@@ -17,6 +17,13 @@ router.get('/', authenticateToken, resolveEffectiveUser, getUserPets);
  * @access Private
  */
 router.post('/', authenticateToken, addPet);
+
+/**
+ * @route GET /api/pets/:petId/complete
+ * @desc Get complete pet data including all medications, vaccinations, weights, and vet visits
+ * @access Private (pet owner and sub-users)
+ */
+router.get('/:petId/complete', authenticateToken, resolveEffectiveUser, getCompletePetData);
 
 /**
  * @route DELETE /api/pets/:petId
