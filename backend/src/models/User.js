@@ -246,11 +246,12 @@ class User {
    */
   static async getSubUsers(parentUserId) {
     const query = `
-      SELECT u.id, u.email, u.username, u.name, u.created_at, u.last_activity, 
+      SELECT DISTINCT u.id, u.email, u.username, u.name, u.created_at, u.last_activity, 
              su.role, su.created_at as linked_at
       FROM users u
       INNER JOIN pet_users su ON u.id = su.user_id
-      WHERE su.owner_id = $1
+      LEFT JOIN pets p ON su.pet_id = p.id
+      WHERE (su.owner_id = $1 OR p.owner_id = $1)
       ORDER BY su.created_at DESC
     `;
     
