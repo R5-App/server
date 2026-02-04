@@ -168,6 +168,89 @@ class Pet {
             client.release();
         }
     }
+
+    /**
+     * Add a user to the pet_users table (grant access to a pet)
+     * @param {number} petId - Pet ID
+     * @param {string} userId - User ID (UUID)
+     * @returns {Promise<object>} Created pet_user record
+     */
+    static async addSharedUser(petId, userId) {
+        const query = `
+            INSERT INTO pet_users (pet_id, user_id)
+            VALUES ($1, $2)
+            ON CONFLICT (pet_id, user_id) DO NOTHING
+            RETURNING *
+        `;
+
+        try {
+            const result = await pool.query(query, [petId, userId]);
+            return result.rows[0];
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Check if a user has access to a pet (either owner or shared user)
+     * @param {number} petId - Pet ID
+     * @param {string} userId - User ID (UUID)
+     * @returns {Promise<boolean>} True if user has access
+     */
+    static async userHasAccess(petId, userId) {
+        const query = `
+            SELECT 1 FROM pets WHERE id = $1 AND owner_id = $2
+            UNION
+            SELECT 1 FROM pet_users WHERE pet_id = $1 AND user_id = $2
+            LIMIT 1
+        `;
+
+        try {
+            const result = await pool.query(query, [petId, userId]);
+            return result.rowCount > 0;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Get all users who have access to a pet
+     * @param {number} petId - Pet ID
+     * @returns {Promise<Array>} Array of users with access
+     */
+    static async getSharedUsers(petId) {
+        const query = `
+            SELECT u.id, u.username, u.email, u.name, pu.created_at as shared_at
+            FROM pet_users pu
+            JOIN users u ON pu.user_id = u.id
+            WHERE pu.pet_id = $1
+            ORDER BY pu.created_at DESC
+        `;
+
+        try {
+            const result = await pool.query(query, [petId]);
+            return result.rows;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Remove a user's access to a pet
+     * @param {number} petId - Pet ID
+     * @param {string} userId - User ID (UUID)
+     * @returns {Promise<boolean>} True if removed
+     */
+    static async removeSharedUser(petId, userId) {
+        const query = 'DELETE FROM pet_users WHERE pet_id = $1 AND user_id = $2 RETURNING id';
+
+        try {
+            const result = await pool.query(query, [petId, userId]);
+            return result.rowCount > 0;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 
