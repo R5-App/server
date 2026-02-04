@@ -23,8 +23,8 @@ const validateSubUserRegistration = (req, res, next) => {
   }
 
   // Validate role (optional, defaults to 'hoitaja')
-  if (role && !['omistaja', 'hoitaja'].includes(role)) {
-    errors.push('Role must be either "omistaja" or "hoitaja"');
+  if (role && !['omistaja', 'hoitaja', 'lääkäri'].includes(role)) {
+    errors.push('Role must be one of: "omistaja", "hoitaja", or "lääkäri"');
   }
 
   // If there are validation errors, return them

@@ -165,7 +165,7 @@ class User {
    * Create a sub-user linked to a parent account
    * @param {object} userData - Sub-user data
    * @param {string} parentUserId - Parent user UUID
-   * @param {string} role - Sub-user role (omistaja, hoitaja)
+   * @param {string} role - Sub-user role (omistaja, hoitaja, lääkäri)
    * @returns {Promise<object>} Created sub-user with relationship
    */
   /* ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -212,7 +212,7 @@ class User {
    * Link an existing user as a sub-user to a parent account
    * @param {string} subUserId - Existing user UUID to link
    * @param {string} parentUserId - Parent user UUID
-   * @param {string} role - Sub-user role (omistaja, hoitaja)
+   * @param {string} role - Sub-user role (omistaja, hoitaja, lääkäri)
    * @returns {Promise<object>} Linked sub-user with relationship
    */
   static async linkSubUser(subUserId, parentUserId, role = 'hoitaja') {
