@@ -456,111 +456,6 @@ const deleteAccount = async (req, res) => {
 };
 
 /**
- * Link an existing user as a sub-user to a parent account
- * @route POST /api/auth/sub-user/:parentUserId
- */
-const linkSubUser = async (req, res) => {
-  try {
-    const { subUserId, role } = req.body;
-    const { parentUserId } = req.params;
-
-    // Verify parent user exists
-    const parentUser = await User.findById(parentUserId);
-    if (!parentUser) {
-      return res.status(404).json({
-        success: false,
-        message: 'Parent account not found'
-      });
-    }
-
-    // Check if authenticated user has permission to link sub-users for this parent account
-    // (Only the parent user or existing admin sub-users can link new sub-users)
-    if (req.user && req.user.userId !== parentUserId) {
-      const parentInfo = await User.getParentUser(req.user.userId);
-      if (!parentInfo || parentInfo.id !== parentUserId || parentInfo.role !== 'admin') {
-        return res.status(403).json({
-          success: false,
-          message: 'You do not have permission to link sub-users for this account'
-        });
-      }
-    }
-
-    // Verify the user to be linked exists
-    const userToLink = await User.findById(subUserId);
-    if (!userToLink) {
-      return res.status(404).json({
-        success: false,
-        message: 'User to link not found'
-      });
-    }
-
-    // Check if user is already a sub-user
-    const isAlreadySubUser = await User.isSubUser(subUserId);
-    if (isAlreadySubUser) {
-      return res.status(409).json({
-        success: false,
-        message: 'User is already a sub-user of another account'
-      });
-    }
-
-    // Check if trying to link parent as their own sub-user
-    if (subUserId === parentUserId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Cannot link a user as their own sub-user'
-      });
-    }
-
-    // Link the existing user as a sub-user
-    const linkedSubUser = await User.linkSubUser(subUserId, parentUserId, role);
-
-    // Return success response with linked sub-user data
-    res.status(201).json({
-      success: true,
-      message: 'Sub-user linked successfully',
-      data: {
-        user: {
-          id: linkedSubUser.id,
-          email: linkedSubUser.email,
-          username: linkedSubUser.username,
-          name: linkedSubUser.name,
-          createdAt: linkedSubUser.created_at,
-          parentUserId: linkedSubUser.parentUserId,
-          role: linkedSubUser.role,
-          linkedAt: linkedSubUser.linkedAt
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Sub-user linking error:', error);
-
-    // Handle database constraint errors
-    if (error.code === '23505') {
-      if (error.constraint === 'pet_users_unique') {
-        return res.status(409).json({
-          success: false,
-          message: 'User is already a sub-user of another account'
-        });
-      }
-    }
-
-    // Foreign key constraint error
-    if (error.code === '23503') {
-      return res.status(404).json({
-        success: false,
-        message: 'Parent account or sub-user account not found'
-      });
-    }
-
-    // Generic error response
-    res.status(500).json({
-      success: false,
-      message: 'Sub-user linking failed. Please try again later.'
-    });
-  }
-};
-
-/**
  * Get all sub-users for the authenticated user's account
  * @route GET /api/auth/sub-users
  */
@@ -752,7 +647,6 @@ module.exports = {
   deleteAccount,
   updateEmail,
   updatePassword,
-  linkSubUser,
   getSubUsers,
   removeSubUser,
   updateSubUserRole
