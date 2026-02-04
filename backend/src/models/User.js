@@ -162,84 +162,6 @@ class User {
 
   
   /**
-   * Create a sub-user linked to a parent account
-   * @param {object} userData - Sub-user data
-   * @param {string} parentUserId - Parent user UUID
-   * @param {string} role - Sub-user role (omistaja, hoitaja, lääkäri)
-   * @returns {Promise<object>} Created sub-user with relationship
-   */
-  /* ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-  static async createSubUser({ email, username, name, passwordHash }, parentUserId, role = 'hoitaja') {
-    const client = await pool.connect();
-  
-    try {
-      await client.query('BEGIN');
-
-      // Create the user account
-      const userQuery = `
-        INSERT INTO users (email, username, name, password_hash)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id, email, username, name, created_at
-      `;
-      const userResult = await client.query(userQuery, [email, username, name, passwordHash]);
-      const newUser = userResult.rows[0];
-
-      // Create the sub-user relationship in pet_users table
-      const subUserQuery = `
-        INSERT INTO pet_users (pet_id, user_id, owner_id, role)
-        VALUES (0, $2, $1, $3)
-        RETURNING owner_id as parent_user_id, user_id as sub_user_id, role, created_at
-      `;
-      const subUserResult = await client.query(subUserQuery, [parentUserId, newUser.id, role]);
-
-      await client.query('COMMIT');
-
-      return {
-        ...newUser,
-        parentUserId: subUserResult.rows[0].parent_user_id,
-        role: subUserResult.rows[0].role
-      };
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-  }
-  */////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Link an existing user as a sub-user to a parent account
-   * @param {string} subUserId - Existing user UUID to link
-   * @param {string} parentUserId - Parent user UUID
-   * @param {string} role - Sub-user role (omistaja, hoitaja, lääkäri)
-   * @returns {Promise<object>} Linked sub-user with relationship
-   */
-  static async linkSubUser(subUserId, parentUserId, role = 'hoitaja') {
-    const query = `
-      INSERT INTO pet_users (pet_id, user_id, owner_id, role)
-      VALUES (0, $2, $1, $3)
-      RETURNING owner_id as parent_user_id, user_id as sub_user_id, role, created_at
-    `;
-    
-    try {
-      const result = await pool.query(query, [parentUserId, subUserId, role]);
-      
-      // Get the linked user's details
-      const user = await this.findById(subUserId);
-      
-      return {
-        ...user,
-        parentUserId: result.rows[0].parent_user_id,
-        role: result.rows[0].role,
-        linkedAt: result.rows[0].created_at
-      };
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
    * Get all sub-users for a parent account
    * @param {string} parentUserId - Parent user UUID
    * @returns {Promise<array>} Array of sub-users
@@ -273,7 +195,7 @@ class User {
       SELECT u.id, u.email, u.username, u.name, su.role
       FROM users u
       INNER JOIN pet_users su ON u.id = su.owner_id
-      WHERE su.user_id = $1 AND su.pet_id = 0
+      WHERE su.user_id = $1
     `;
     
     try {
@@ -290,7 +212,7 @@ class User {
    * @returns {Promise<boolean>} True if user is a sub-user
    */
   static async isSubUser(userId) {
-    const query = 'SELECT 1 FROM pet_users WHERE user_id = $1 AND pet_id = 0';
+    const query = 'SELECT 1 FROM pet_users WHERE user_id = $1';
     
     try {
       const result = await pool.query(query, [userId]);
@@ -306,7 +228,7 @@ class User {
    * @returns {Promise<boolean>} True if sub-user relationship was removed
    */
   static async removeSubUser(subUserId) {
-    const query = 'DELETE FROM pet_users WHERE user_id = $1 AND pet_id = 0 RETURNING user_id as sub_user_id';
+    const query = 'DELETE FROM pet_users WHERE user_id = $1 RETURNING user_id as sub_user_id';
     
     try {
       const result = await pool.query(query, [subUserId]);
@@ -342,7 +264,7 @@ class User {
     const query = `
       UPDATE pet_users
       SET role = $1
-      WHERE user_id = $2 AND pet_id = 0
+      WHERE user_id = $2
       RETURNING owner_id as parent_user_id, user_id as sub_user_id, role
     `;
     

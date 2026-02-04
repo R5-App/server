@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, logout, deleteAccount, updateEmail, updatePassword, linkSubUser, getSubUsers, removeSubUser, updateSubUserRole } = require('../controllers/authController');
+const { register, login, logout, deleteAccount, updateEmail, updatePassword, getSubUsers, removeSubUser, updateSubUserRole } = require('../controllers/authController');
 const validateRegistration = require('../middleware/validateRegistration');
 const validateLogin = require('../middleware/validateLogin');
-const validateSubUserRegistration = require('../middleware/validateSubUserRegistration');
 const validateSubUserRoleUpdate = require('../middleware/validateSubUserRoleUpdate');
 const authenticateToken = require('../middleware/authenticateToken');
 
@@ -48,13 +47,6 @@ router.put('/password', authenticateToken, updatePassword);
  * @access  Private (authenticated user)
  */
 router.delete('/account/:userId', authenticateToken, deleteAccount);
-
-/**
- * @route   POST /api/auth/sub-user/:parentUserId
- * @desc    Link an existing user as a sub-user to a parent account
- * @access  Private (parent user authenticated)
- */
-router.post('/sub-user/:parentUserId', authenticateToken, validateSubUserRegistration, linkSubUser);
 
 /**
  * @route   GET /api/auth/sub-users
