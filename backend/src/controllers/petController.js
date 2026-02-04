@@ -276,8 +276,8 @@ const redeemPetShareCode = async (req, res) => {
             });
         }
 
-        // Add user to pet_users table
-        await Pet.addSharedUser(petId, userId);
+        // Add user to pet_users table with owner_id and default role 'Hoitaja'
+        await Pet.addSharedUser(petId, userId, pet.owner_id, 'Hoitaja');
 
         // Get complete pet data to return
         const completePetData = await Pet.getCompleteDataById(petId);
