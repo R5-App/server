@@ -173,18 +173,20 @@ class Pet {
      * Add a user to the pet_users table (grant access to a pet)
      * @param {number} petId - Pet ID
      * @param {string} userId - User ID (UUID)
+     * @param {string} ownerId - Owner user ID (UUID)
+     * @param {string} role - User role (default: 'Hoitaja')
      * @returns {Promise<object>} Created pet_user record
      */
-    static async addSharedUser(petId, userId) {
+    static async addSharedUser(petId, userId, ownerId, role = 'Hoitaja') {
         const query = `
-            INSERT INTO pet_users (pet_id, user_id)
-            VALUES ($1, $2)
+            INSERT INTO pet_users (pet_id, user_id, owner_id, role)
+            VALUES ($1, $2, $3, $4)
             ON CONFLICT (pet_id, user_id) DO NOTHING
             RETURNING *
         `;
 
         try {
-            const result = await pool.query(query, [petId, userId]);
+            const result = await pool.query(query, [petId, userId, ownerId, role]);
             return result.rows[0];
         } catch (error) {
             throw error;
@@ -220,7 +222,7 @@ class Pet {
      */
     static async getSharedUsers(petId) {
         const query = `
-            SELECT u.id, u.username, u.email, u.name, pu.created_at as shared_at
+            SELECT u.id, u.username, u.email, u.name, pu.role, pu.created_at as shared_at
             FROM pet_users pu
             JOIN users u ON pu.user_id = u.id
             WHERE pu.pet_id = $1

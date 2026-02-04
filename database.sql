@@ -57,6 +57,8 @@ CREATE TABLE IF NOT EXISTS public.pet_users
     pet_id integer NOT NULL,
     user_id uuid NOT NULL,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
+    owner_id uuid,
+    role text COLLATE pg_catalog."default" NOT NULL DEFAULT 'hoitaja'::text,
     CONSTRAINT pet_users_pkey PRIMARY KEY (id),
     CONSTRAINT pet_users_unique UNIQUE (pet_id, user_id)
 );
@@ -204,6 +206,13 @@ ALTER TABLE IF EXISTS public.favorite_locations
 ALTER TABLE IF EXISTS public.pet_medication
     ADD CONSTRAINT pet_medication_pet_id_fkey FOREIGN KEY (pet_id)
     REFERENCES public.pets (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.pet_users
+    ADD CONSTRAINT pet_users_owner_id_fkey FOREIGN KEY (owner_id)
+    REFERENCES public.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 

@@ -431,7 +431,7 @@ const deleteAccount = async (req, res) => {
       });
     }
 
-    // Delete the user (cascade will handle sub_users table cleanup)
+    // Delete the user (cascade will handle pet_users table cleanup)
     const deleted = await User.deleteById(userId);
 
     if (deleted) {
@@ -536,7 +536,7 @@ const linkSubUser = async (req, res) => {
 
     // Handle database constraint errors
     if (error.code === '23505') {
-      if (error.constraint === 'sub_users_sub_user_id_key') {
+      if (error.constraint === 'pet_users_unique') {
         return res.status(409).json({
           success: false,
           message: 'User is already a sub-user of another account'

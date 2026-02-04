@@ -160,6 +160,7 @@ class User {
     }
   }
 
+  
   /**
    * Create a sub-user linked to a parent account
    * @param {object} userData - Sub-user data
@@ -167,9 +168,10 @@ class User {
    * @param {string} role - Sub-user role (omistaja, hoitaja)
    * @returns {Promise<object>} Created sub-user with relationship
    */
+  /* ///////////////////////////////////////////////////////////////////////////////////////////////////////////
   static async createSubUser({ email, username, name, passwordHash }, parentUserId, role = 'hoitaja') {
     const client = await pool.connect();
-    
+  
     try {
       await client.query('BEGIN');
 
@@ -182,11 +184,11 @@ class User {
       const userResult = await client.query(userQuery, [email, username, name, passwordHash]);
       const newUser = userResult.rows[0];
 
-      // Create the sub-user relationship
+      // Create the sub-user relationship in pet_users table
       const subUserQuery = `
-        INSERT INTO sub_users (parent_user_id, sub_user_id, role)
-        VALUES ($1, $2, $3)
-        RETURNING parent_user_id, sub_user_id, role, created_at
+        INSERT INTO pet_users (pet_id, user_id, owner_id, role)
+        VALUES (0, $2, $1, $3)
+        RETURNING owner_id as parent_user_id, user_id as sub_user_id, role, created_at
       `;
       const subUserResult = await client.query(subUserQuery, [parentUserId, newUser.id, role]);
 
@@ -204,6 +206,7 @@ class User {
       client.release();
     }
   }
+  */////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /**
    * Link an existing user as a sub-user to a parent account
@@ -214,9 +217,9 @@ class User {
    */
   static async linkSubUser(subUserId, parentUserId, role = 'hoitaja') {
     const query = `
-      INSERT INTO sub_users (parent_user_id, sub_user_id, role)
-      VALUES ($1, $2, $3)
-      RETURNING parent_user_id, sub_user_id, role, created_at
+      INSERT INTO pet_users (pet_id, user_id, owner_id, role)
+      VALUES (0, $2, $1, $3)
+      RETURNING owner_id as parent_user_id, user_id as sub_user_id, role, created_at
     `;
     
     try {
@@ -246,8 +249,8 @@ class User {
       SELECT u.id, u.email, u.username, u.name, u.created_at, u.last_activity, 
              su.role, su.created_at as linked_at
       FROM users u
-      INNER JOIN sub_users su ON u.id = su.sub_user_id
-      WHERE su.parent_user_id = $1
+      INNER JOIN pet_users su ON u.id = su.user_id
+      WHERE su.owner_id = $1 AND su.pet_id = 0
       ORDER BY su.created_at DESC
     `;
     
@@ -268,8 +271,8 @@ class User {
     const query = `
       SELECT u.id, u.email, u.username, u.name, su.role
       FROM users u
-      INNER JOIN sub_users su ON u.id = su.parent_user_id
-      WHERE su.sub_user_id = $1
+      INNER JOIN pet_users su ON u.id = su.owner_id
+      WHERE su.user_id = $1 AND su.pet_id = 0
     `;
     
     try {
@@ -286,7 +289,7 @@ class User {
    * @returns {Promise<boolean>} True if user is a sub-user
    */
   static async isSubUser(userId) {
-    const query = 'SELECT 1 FROM sub_users WHERE sub_user_id = $1';
+    const query = 'SELECT 1 FROM pet_users WHERE user_id = $1 AND pet_id = 0';
     
     try {
       const result = await pool.query(query, [userId]);
@@ -302,7 +305,7 @@ class User {
    * @returns {Promise<boolean>} True if sub-user relationship was removed
    */
   static async removeSubUser(subUserId) {
-    const query = 'DELETE FROM sub_users WHERE sub_user_id = $1 RETURNING sub_user_id';
+    const query = 'DELETE FROM pet_users WHERE user_id = $1 AND pet_id = 0 RETURNING user_id as sub_user_id';
     
     try {
       const result = await pool.query(query, [subUserId]);
@@ -336,10 +339,10 @@ class User {
    */
   static async updateSubUserRole(subUserId, newRole) {
     const query = `
-      UPDATE sub_users
+      UPDATE pet_users
       SET role = $1
-      WHERE sub_user_id = $2
-      RETURNING parent_user_id, sub_user_id, role
+      WHERE user_id = $2 AND pet_id = 0
+      RETURNING owner_id as parent_user_id, user_id as sub_user_id, role
     `;
     
     try {
