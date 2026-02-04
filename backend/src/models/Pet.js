@@ -174,10 +174,10 @@ class Pet {
      * @param {number} petId - Pet ID
      * @param {string} userId - User ID (UUID)
      * @param {string} ownerId - Owner user ID (UUID)
-     * @param {string} role - User role (default: 'Hoitaja')
+     * @param {string} role - User role (default: 'hoitaja')
      * @returns {Promise<object>} Created pet_user record
      */
-    static async addSharedUser(petId, userId, ownerId, role = 'Hoitaja') {
+    static async addSharedUser(petId, userId, ownerId, role = 'hoitaja') {
         const query = `
             INSERT INTO pet_users (pet_id, user_id, owner_id, role)
             VALUES ($1, $2, $3, $4)
