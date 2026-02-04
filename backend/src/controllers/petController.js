@@ -276,8 +276,24 @@ const redeemPetShareCode = async (req, res) => {
             });
         }
 
-        // Add user to pet_users table with owner_id and default role 'Hoitaja'
-        await Pet.addSharedUser(petId, userId, pet.owner_id, 'Hoitaja');
+        // Check if user already has access
+        const hasAccess = await Pet.userHasAccess(petId, userId);
+        if (hasAccess) {
+            return res.status(400).json({
+                success: false,
+                message: 'You already have access to this pet'
+            });
+        }
+
+        // Add user to pet_users table with owner_id and default role 'hoitaja'
+        const sharedUser = await Pet.addSharedUser(petId, userId, pet.owner_id, 'hoitaja');
+        
+        if (!sharedUser) {
+            return res.status(409).json({
+                success: false,
+                message: 'Failed to add pet access - user may already have access'
+            });
+        }
 
         // Get complete pet data to return
         const completePetData = await Pet.getCompleteDataById(petId);
@@ -291,7 +307,8 @@ const redeemPetShareCode = async (req, res) => {
         console.error('Redeem share code error:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to redeem share code'
+            message: 'Failed to redeem share code',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
