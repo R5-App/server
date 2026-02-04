@@ -250,7 +250,7 @@ class User {
              su.role, su.created_at as linked_at
       FROM users u
       INNER JOIN pet_users su ON u.id = su.user_id
-      WHERE su.owner_id = $1 AND su.pet_id = 0
+      WHERE su.owner_id = $1
       ORDER BY su.created_at DESC
     `;
     
