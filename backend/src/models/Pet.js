@@ -94,6 +94,29 @@ class Pet {
     }
 
     /**
+     * Get all pets for a user including owned pets and shared pets
+     * @param {string} userId - User ID (UUID)
+     * @returns {Promise<Array>} Array of pets (owned and shared)
+     */
+    static async getAllByOwnerIdIncludingShared(userId) {
+        const query = `
+            SELECT DISTINCT p.id, p.owner_id, p.name, p.type, p.breed, p.sex, p.birthdate, p.notes, p.created_at,
+                   CASE WHEN p.owner_id = $1 THEN true ELSE false END as is_owner
+            FROM pets p
+            LEFT JOIN pet_users pu ON p.id = pu.pet_id
+            WHERE p.owner_id = $1 OR pu.user_id = $1
+            ORDER BY p.created_at DESC
+        `;
+
+        try {
+            const result = await pool.query(query, [userId]);
+            return result.rows;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
      * Get complete pet data with all related information
      * @param {number} petId - Pet ID
      * @returns {Promise<object>} Complete pet data including medications, vaccinations, weights, and vet visits
