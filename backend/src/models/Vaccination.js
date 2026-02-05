@@ -44,16 +44,17 @@ class Vaccination {
     }
 
     /**
-     * Get all vaccinations for a user's pets
+     * Get all vaccinations for a user's pets (owned and shared)
      * @param {string} userId - User ID (UUID)
      * @returns {Promise<Array>} Array of vaccinations with pet information
      */
     static async getAllByUserId(userId) {
         const query = `
-            SELECT pv.*, p.name as pet_name, p.type as pet_type
+            SELECT DISTINCT pv.*, p.name as pet_name, p.type as pet_type
             FROM pet_vaccination pv
             JOIN pets p ON pv.pet_id = p.id
-            WHERE p.owner_id = $1
+            LEFT JOIN pet_users pu ON p.id = pu.pet_id
+            WHERE p.owner_id = $1 OR pu.user_id = $1
             ORDER BY p.name, pv.vaccination_date DESC
         `;
 
