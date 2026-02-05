@@ -93,6 +93,9 @@ const getCompletePetData = async (req, res) => {
             });
         }
 
+        // Get user's access level for this pet
+        const accessLevel = await Pet.getAccessLevel(petId, userId);
+
         // Get complete pet data
         const completePetData = await Pet.getCompleteDataById(petId);
 
@@ -103,10 +106,19 @@ const getCompletePetData = async (req, res) => {
             });
         }
 
+        // Add access level information to response
+        const responseData = {
+            ...completePetData,
+            user_access: {
+                is_owner: accessLevel.is_owner,
+                role: accessLevel.role
+            }
+        };
+
         res.status(200).json({
             success: true,
             message: 'Complete pet data retrieved successfully',
-            data: completePetData
+            data: responseData
         });
     } catch (error) {
         console.error('Get complete pet data error:', error);
