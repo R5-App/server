@@ -44,16 +44,17 @@ class Medication {
     }
 
     /**
-     * Get all medications for a user's pets
+     * Get all medications for a user's pets (owned and shared)
      * @param {string} userId - User ID (UUID)
      * @returns {Promise<Array>} Array of medications with pet information
      */
     static async getAllByUserId(userId) {
         const query = `
-            SELECT pm.*, p.name as pet_name, p.type as pet_type
+            SELECT DISTINCT pm.*, p.name as pet_name, p.type as pet_type
             FROM pet_medication pm
             JOIN pets p ON pm.pet_id = p.id
-            WHERE p.owner_id = $1
+            LEFT JOIN pet_users pu ON p.id = pu.pet_id
+            WHERE p.owner_id = $1 OR pu.user_id = $1
             ORDER BY p.name, pm.medication_date DESC
         `;
 

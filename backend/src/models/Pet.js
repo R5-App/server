@@ -239,6 +239,55 @@ class Pet {
     }
 
     /**
+     * Get all pet IDs accessible to a user (owned and shared)
+     * @param {string} userId - User ID (UUID)
+     * @returns {Promise<Array>} Array of pet IDs
+     */
+    static async getAccessiblePetIds(userId) {
+        const query = `
+            SELECT DISTINCT p.id
+            FROM pets p
+            LEFT JOIN pet_users pu ON p.id = pu.pet_id
+            WHERE p.owner_id = $1 OR pu.user_id = $1
+            ORDER BY p.id
+        `;
+
+        try {
+            const result = await pool.query(query, [userId]);
+            return result.rows.map(row => row.id);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Get user's access level for a pet
+     * @param {number} petId - Pet ID
+     * @param {string} userId - User ID (UUID)
+     * @returns {Promise<object>} Object with isOwner and role properties (for future permission restrictions)
+     */
+    static async getAccessLevel(petId, userId) {
+        const query = `
+            SELECT 
+                CASE WHEN p.owner_id = $2 THEN true ELSE false END as is_owner,
+                COALESCE(pu.role, 'owner') as role
+            FROM pets p
+            LEFT JOIN pet_users pu ON p.id = pu.pet_id AND pu.user_id = $2
+            WHERE p.id = $1 AND (p.owner_id = $2 OR pu.user_id = $2)
+        `;
+
+        try {
+            const result = await pool.query(query, [petId, userId]);
+            if (result.rows.length === 0) {
+                return null;
+            }
+            return result.rows[0];
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
      * Get all users who have access to a pet
      * @param {number} petId - Pet ID
      * @returns {Promise<Array>} Array of users with access

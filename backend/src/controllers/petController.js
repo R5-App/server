@@ -84,9 +84,9 @@ const getCompletePetData = async (req, res) => {
             });
         }
 
-        // Verify pet belongs to user
-        const belongsToUser = await Pet.belongsToUser(petId, userId);
-        if (!belongsToUser) {
+        // Verify user has access to pet (owner or shared user)
+        const hasAccess = await Pet.userHasAccess(petId, userId);
+        if (!hasAccess) {
             return res.status(404).json({
                 success: false,
                 message: 'Pet not found or access denied'
