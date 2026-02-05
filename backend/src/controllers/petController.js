@@ -2,7 +2,7 @@ const Pet = require ('../models/Pet');
 const { generateShareCode, verifyShareCode } = require('../utils/shareCode');
 
 /**
- * Get all pets for the authenticated user
+ * Get all pets for the authenticated user (owned and shared)
  * @route GET /api/pets
  */
 const getUserPets = async (req, res) => {
@@ -10,7 +10,7 @@ const getUserPets = async (req, res) => {
         // Use effectiveUserId for sub-user support (set by resolveEffectiveUser middleware)
         const userId = req.effectiveUserId || req.user.userId;
 
-        const pets = await Pet.getAllByOwnerId(userId);
+        const pets = await Pet.getAllByOwnerIdIncludingShared(userId);
 
         res.status(200).json({
             success: true,
