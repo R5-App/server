@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getUserPets, addPet, deletePet, getCompletePetData, generatePetShareCode, redeemPetShareCode, getSharedUsers, removeSharedUser } = require('../controllers/petController');
+const { getUserPets, addPet, deletePet, getPetById, updatePet, getCompletePetData, generatePetShareCode, redeemPetShareCode, getSharedUsers, removeSharedUser } = require('../controllers/petController');
 const authenticateToken = require('../middleware/authenticateToken');
 const resolveEffectiveUser = require('../middleware/resolveEffectiveUser');
 
@@ -31,6 +31,20 @@ router.post('/redeem', authenticateToken, redeemPetShareCode);
  * @access Private (pet owner and sub-users)
  */
 router.get('/:petId/complete', authenticateToken, resolveEffectiveUser, getCompletePetData);
+
+/**
+ * @route GET /api/pets/:petId
+ * @desc Get pet details by ID (basic info only)
+ * @access Private (pet owner and sub-users)
+ */
+router.get('/:petId', authenticateToken, resolveEffectiveUser, getPetById);
+
+/**
+ * @route PUT /api/pets/:petId
+ * @desc Update pet details by pet ID
+ * @access Private (only pet owner)
+ */
+router.put('/:petId', authenticateToken, updatePet);
 
 /**
  * @route POST /api/pets/:petId/share
