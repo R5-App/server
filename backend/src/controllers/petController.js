@@ -200,10 +200,12 @@ const updatePet = async (req, res) => {
         }
 
         // Update pet in database
+        // HOX! later add maybe this:  SET name = $1, type = $2, breed = $3, sex = $4, birthdate = $5, notes = $6, updated_at = NOW()
+        // when the actual pet table has been updated to have the updated_at column.
         const pool = require('../config/database');
         const query = `
             UPDATE pets 
-            SET name = $1, type = $2, breed = $3, sex = $4, birthdate = $5, notes = $6, updated_at = NOW()
+            SET name = $1, type = $2, breed = $3, sex = $4, birthdate = $5, notes = $6
             WHERE id = $7
             RETURNING *
         `;
