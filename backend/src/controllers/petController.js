@@ -117,6 +117,120 @@ const getCompletePetData = async (req, res) => {
     }
 };
 
+
+/**
+ *  Get pet by ID (basic info, no medications etc)
+ * @route GET /api/pets/:petId
+ */
+const getPetById = async (req, res) => {
+    try {
+        const userId = req.effectiveUserId || req.user.userId;
+        const { petId } = req.params;
+
+        if (!petId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Pet ID required'
+            });
+        }
+
+        // Verify user has access to pet
+        const hasAccess = await Pet.userHasAccess(petId, userId);
+        if (!hasAccess) {
+            return res.status(403).json({
+                success: false,
+                message: 'Pet not found or access denied'
+            });
+        }
+
+        const pet = await Pet.getById(petId);
+        if (!pet) {
+            return res.status(404).json({
+                success: false,
+                message: 'Pet not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Pet retrieved successfully',
+            data: pet
+        });
+    } catch (error) {
+        console.error('Get pet error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve pet'
+        });
+    }
+};
+
+
+/**
+ * Update pet basic information
+ * @route PUT /api/pets/:petId
+ */
+const updatePet = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { petId } = req.params;
+        const { name, type, breed, sex, birthdate, notes } = req.body;
+
+        if (!petId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Pet ID required'
+            });
+        }
+
+        // Get pet and verify ownership
+        const pet = await Pet.getById(petId);
+        if (!pet) {
+            return res.status(404).json({
+                success: false,
+                message: 'Pet not found'
+            });
+        }
+
+        if (pet.owner_id !== userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Only pet owner can update this pet'
+            });
+        }
+
+        // Update pet in database
+        const pool = require('../config/database');
+        const query = `
+            UPDATE pets 
+            SET name = $1, type = $2, breed = $3, sex = $4, birthdate = $5, notes = $6, updated_at = NOW()
+            WHERE id = $7
+            RETURNING *
+        `;
+
+        const result = await pool.query(query, [name, type, breed, sex, birthdate, notes, petId]);
+        
+        if (result.rows.length === 0) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to update pet'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Pet updated successfully',
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Update pet error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update pet'
+        });
+    }
+};
+
 /**
  * Delete pet
  * @route DELETE /api/pets/:petId
@@ -421,6 +535,8 @@ module.exports = {
     addPet,
     deletePet,
     getCompletePetData,
+    getPetById,
+    updatePet,
     generatePetShareCode,
     redeemPetShareCode,
     getSharedUsers,
