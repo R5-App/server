@@ -55,6 +55,7 @@ const getUserPetCalendarEvents = async (req, res) => {
                 type_name: event.type_name || 'Unknown',
                 title: event.title,
                 description: event.description,
+                time: event.time,
                 remind_before_min: event.remind_before_min,
                 created_at: event.created_at
             });
@@ -178,7 +179,7 @@ const getCalendarEventById = async (req, res) => {
 const createCalendarEvent = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { pet_id, type_id, title, description, remind_before_min } = req.body;
+        const { pet_id, type_id, title, description, time, remind_before_min } = req.body;
 
         // Validate required fields
         if (!pet_id) {
@@ -192,6 +193,13 @@ const createCalendarEvent = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'Title is required'
+            });
+        }
+
+        if (!time) {
+            return res.status(400).json({
+                success: false,
+                message: 'Time is required'
             });
         }
 
@@ -218,6 +226,7 @@ const createCalendarEvent = async (req, res) => {
             type_id,
             title,
             description,
+            time,
             remind_before_min
         });
 
@@ -243,7 +252,7 @@ const updateCalendarEvent = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { eventId } = req.params;
-        const { type_id, title, description, remind_before_min } = req.body;
+        const { type_id, title, description, time, remind_before_min } = req.body;
 
         // Get the existing event
         const existingEvent = await CalendarEvent.getById(eventId);
@@ -276,6 +285,7 @@ const updateCalendarEvent = async (req, res) => {
             type_id,
             title,
             description,
+            time,
             remind_before_min
         });
 
