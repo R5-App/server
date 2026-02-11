@@ -55,6 +55,7 @@ const getUserPetCalendarEvents = async (req, res) => {
                 type_name: event.type_name || 'Unknown',
                 title: event.title,
                 description: event.description,
+                date: event.date,
                 time: event.time,
                 remind_before_min: event.remind_before_min,
                 created_at: event.created_at
