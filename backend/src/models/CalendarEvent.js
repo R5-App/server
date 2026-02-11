@@ -73,15 +73,15 @@ class CalendarEvent {
      * @param {object} eventData - Calendar event data
      * @returns {Promise<object>} Created calendar event
      */
-    static async create({ pet_id, type_id, title, description, time, remind_before_min }) {
+    static async create({ pet_id, type_id, title, description, date, time, remind_before_min }) {
         const query = `
-            INSERT INTO calendar_events (pet_id, type_id, title, description, time, remind_before_min)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO calendar_events (pet_id, type_id, title, description, date, time, remind_before_min)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *
         `;
 
         try {
-            const result = await pool.query(query, [pet_id, type_id, title, description, time, remind_before_min]);
+            const result = await pool.query(query, [pet_id, type_id, title, description, date, time, remind_before_min]);
             return result.rows[0];
         } catch (error) {
             throw error;
@@ -117,20 +117,21 @@ class CalendarEvent {
      * @param {object} updates - Fields to update
      * @returns {Promise<object>} Updated calendar event
      */
-    static async update(eventId, { type_id, title, description, time, remind_before_min }) {
+    static async update(eventId, { type_id, title, description, date, time, remind_before_min }) {
         const query = `
             UPDATE calendar_events
             SET type_id = COALESCE($1, type_id),
                 title = COALESCE($2, title),
                 description = COALESCE($3, description),
-                time = COALESCE($4, time),
-                remind_before_min = COALESCE($5, remind_before_min)
-            WHERE id = $6
+                date = COALESCE($4, date),
+                time = COALESCE($5, time),
+                remind_before_min = COALESCE($6, remind_before_min)
+            WHERE id = $7
             RETURNING *
         `;
 
         try {
-            const result = await pool.query(query, [type_id, title, description, time, remind_before_min, eventId]);
+            const result = await pool.query(query, [type_id, title, description, date, time, remind_before_min, eventId]);
             return result.rows[0];
         } catch (error) {
             throw error;

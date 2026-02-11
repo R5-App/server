@@ -10,11 +10,10 @@ CREATE TABLE IF NOT EXISTS public.calendar_events
     type_id integer,
     title text COLLATE pg_catalog."default" NOT NULL,
     description text COLLATE pg_catalog."default",
-    start_date date NOT NULL,
-    end_date date,
-    repeat_rule_min integer,
     remind_before_min integer,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
+    "time" time without time zone NOT NULL,
+    date date NOT NULL,
     CONSTRAINT calendar_events_pkey PRIMARY KEY (id)
 );
 
@@ -24,6 +23,16 @@ CREATE TABLE IF NOT EXISTS public.favorite_locations
     location_id integer NOT NULL,
     created_at timestamp without time zone NOT NULL DEFAULT now(),
     CONSTRAINT favorite_locations_pkey PRIMARY KEY (user_id, location_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.images
+(
+    id serial NOT NULL,
+    user_id uuid,
+    pet_id integer,
+    filename text COLLATE pg_catalog."default" NOT NULL,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT images_pkey PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS public.locations
@@ -189,6 +198,14 @@ ALTER TABLE IF EXISTS public.calendar_events
     ON DELETE CASCADE;
 
 
+ALTER TABLE IF EXISTS public.calendar_events
+    ADD CONSTRAINT calendar_events_type_id_fkey FOREIGN KEY (type_id)
+    REFERENCES public.vet_visit_types (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
 ALTER TABLE IF EXISTS public.favorite_locations
     ADD CONSTRAINT fk_favorite_location FOREIGN KEY (location_id)
     REFERENCES public.locations (id) MATCH SIMPLE
@@ -198,6 +215,20 @@ ALTER TABLE IF EXISTS public.favorite_locations
 
 ALTER TABLE IF EXISTS public.favorite_locations
     ADD CONSTRAINT fk_favorite_user FOREIGN KEY (user_id)
+    REFERENCES public.users (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.images
+    ADD CONSTRAINT images_pet_id_fkey FOREIGN KEY (pet_id)
+    REFERENCES public.pets (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.images
+    ADD CONSTRAINT images_user_id_fkey FOREIGN KEY (user_id)
     REFERENCES public.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
