@@ -150,7 +150,7 @@ const getCalendarEventById = async (req, res) => {
         }
 
         // Check if user has access to this pet
-        const hasAccess = await Pet.hasUserAccess(calendarEvent.pet_id, userId);
+        const hasAccess = await Pet.userHasAccess(calendarEvent.pet_id, userId);
         if (!hasAccess) {
             return res.status(403).json({
                 success: false,
@@ -213,7 +213,7 @@ const createCalendarEvent = async (req, res) => {
         }
 
         // Check if user has permission to add calendar events for this pet
-        const hasPermission = await hasPermissionForPet(userId, pet.owner_id);
+        const hasPermission = await Pet.userHasAccess(pet_id, userId);
         if (!hasPermission) {
             return res.status(403).json({
                 success: false,
@@ -273,7 +273,7 @@ const updateCalendarEvent = async (req, res) => {
         }
 
         // Check if user has permission to update this event
-        const hasPermission = await hasPermissionForPet(userId, pet.owner_id);
+        const hasPermission = await Pet.userHasAccess(pet.pet_id, userId);
         if (!hasPermission) {
             return res.status(403).json({
                 success: false,
