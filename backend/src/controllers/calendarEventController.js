@@ -273,7 +273,7 @@ const updateCalendarEvent = async (req, res) => {
         }
 
         // Check if user has permission to update this event
-        const hasPermission = await Pet.userHasAccess(pet.pet_id, userId);
+        const hasPermission = await Pet.userHasAccess(pet.id, userId);
         if (!hasPermission) {
             return res.status(403).json({
                 success: false,
