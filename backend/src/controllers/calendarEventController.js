@@ -101,7 +101,7 @@ const getPetCalendarEvents = async (req, res) => {
         }
 
         // Check if user has access to this pet
-        const hasAccess = await Pet.hasUserAccess(petId, userId);
+        const hasAccess = await Pet.userHasAccess(petId, userId);
         if (!hasAccess) {
             return res.status(403).json({
                 success: false,
