@@ -96,14 +96,18 @@ class Pet {
     /**
      * Get all pets for a user including owned pets and shared pets
      * @param {string} userId - User ID (UUID)
-     * @returns {Promise<Array>} Array of pets (owned and shared)
+     * @returns {Promise<Array>} Array of pets (owned and shared) with user's role
      */
     static async getAllByOwnerIdIncludingShared(userId) {
         const query = `
             SELECT DISTINCT p.id, p.owner_id, p.name, p.type, p.breed, p.sex, p.birthdate, p.notes, p.created_at,
-                   CASE WHEN p.owner_id = $1 THEN true ELSE false END as is_owner
+                   CASE WHEN p.owner_id = $1 THEN true ELSE false END as is_owner,
+                   CASE 
+                       WHEN p.owner_id = $1 THEN 'omistaja'
+                       ELSE COALESCE(pu.role, 'hoitaja')
+                   END as role
             FROM pets p
-            LEFT JOIN pet_users pu ON p.id = pu.pet_id
+            LEFT JOIN pet_users pu ON p.id = pu.pet_id AND pu.user_id = $1
             WHERE p.owner_id = $1 OR pu.user_id = $1
             ORDER BY p.created_at DESC
         `;
