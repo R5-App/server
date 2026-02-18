@@ -255,21 +255,23 @@ class User {
   }
 
   /**
-   * Update the role of a sub-user
+   * Update the role of a sub-user for a specific pet
    * @param {string} subUserId - Sub-user UUID
+   * @param {number} petId - Pet ID
+   * @param {string} ownerId - Owner UUID
    * @param {string} newRole - New role value
    * @returns {Promise<object>} Updated sub-user info
    */
-  static async updateSubUserRole(subUserId, newRole) {
+  static async updateSubUserRole(subUserId, petId, ownerId, newRole) {
     const query = `
       UPDATE pet_users
       SET role = $1
-      WHERE user_id = $2
-      RETURNING owner_id as parent_user_id, user_id as sub_user_id, role
+      WHERE user_id = $2 AND pet_id = $3 AND owner_id = $4
+      RETURNING owner_id as parent_user_id, user_id as sub_user_id, pet_id, role
     `;
     
     try {
-      const result = await pool.query(query, [newRole, subUserId]);
+      const result = await pool.query(query, [newRole, subUserId, petId, ownerId]);
       return result.rows[0] || null;
     } catch (error) {
       throw error;

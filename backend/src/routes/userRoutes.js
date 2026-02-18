@@ -63,10 +63,10 @@ router.get('/sub-users', authenticateToken, getSubUsers);
 router.delete('/sub-user/:subUserId', authenticateToken, removeSubUser);
 
 /**
- * @route   PUT /api/auth/sub-user/:subUserId/role
- * @desc    Update the role of a sub-user
+ * @route   PUT /api/auth/sub-user/:subUserId/pet/:petId/role
+ * @desc    Update the role of a sub-user for a specific pet
  * @access  Private (parent account owner only)
  */
-router.put('/sub-user/:subUserId/role', authenticateToken, validateSubUserRoleUpdate, updateSubUserRole);
+router.put('/sub-user/:subUserId/pet/:petId/role', authenticateToken, validateSubUserRoleUpdate, updateSubUserRole);
 
 module.exports = router;

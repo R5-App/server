@@ -567,12 +567,12 @@ const removeSubUser = async (req, res) => {
 };
 
 /**
- * Update the role of a sub-user
- * @route PUT /api/auth/sub-user/:subUserId/role
+ * Update the role of a sub-user for a specific pet
+ * @route PUT /api/auth/sub-user/:subUserId/pet/:petId/role
  */
 const updateSubUserRole = async (req, res) => {
   try {
-    const { subUserId } = req.params;
+    const { subUserId, petId } = req.params;
     const { role } = req.body;
     const requestingUserId = req.user.userId;
 
@@ -603,8 +603,8 @@ const updateSubUserRole = async (req, res) => {
       });
     }
 
-    // Update the sub-user role
-    const updatedSubUser = await User.updateSubUserRole(subUserId, role);
+    // Update the sub-user role for the specific pet
+    const updatedSubUser = await User.updateSubUserRole(subUserId, parseInt(petId), requestingUserId, role);
 
     if (!updatedSubUser) {
       return res.status(500).json({
