@@ -445,15 +445,3 @@ docker-compose -f docker-compose.ci.yml up
 ## License
 
 See LICENSE file in the root directory.
-
-## Support
-
-For issues and questions, please open an issue in the repository.
-```bash
-npm run dev
-```
-
-Run in production mode:
-```bash
-npm start
-```
