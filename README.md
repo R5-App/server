@@ -442,14 +442,6 @@ Ensure Docker is running and execute:
 docker-compose -f docker-compose.ci.yml up
 ```
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
 ## License
 
 See LICENSE file in the root directory.
