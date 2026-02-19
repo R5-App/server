@@ -68,7 +68,16 @@ const getAvatarById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const avatar = await Avatar.getById(id);
+        // Convert id to integer (comes from route params as string)
+        const avatarId = parseInt(id, 10);
+        if (isNaN(avatarId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid avatar ID format'
+            });
+        }
+
+        const avatar = await Avatar.getById(avatarId);
 
         if (!avatar) {
             return res.status(404).json({
@@ -99,9 +108,22 @@ const downloadAvatar = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const avatar = await Avatar.getById(id);
+        // Convert id to integer (comes from route params as string)
+        const avatarId = parseInt(id, 10);
+        if (isNaN(avatarId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid avatar ID format'
+            });
+        }
+
+        console.log(`[AvatarController] Downloading avatar ${avatarId}`);
+
+        const avatar = await Avatar.getById(avatarId);
+        console.log(`[AvatarController] Avatar record:`, avatar);
 
         if (!avatar) {
+            console.log(`[AvatarController] Avatar ${avatarId} not found in database`);
             return res.status(404).json({
                 success: false,
                 message: 'Avatar not found'
@@ -112,13 +134,18 @@ const downloadAvatar = async (req, res) => {
         const uploadDir = 'uploads/avatars';
         const filepath = path.join(uploadDir, avatar.filename);
 
+        console.log(`[AvatarController] Looking for file at: ${filepath}`);
+
         // Check if file exists on disk
         if (!fs.existsSync(filepath)) {
+            console.error(`[AvatarController] File not found on disk: ${filepath}`);
             return res.status(404).json({
                 success: false,
                 message: 'Image file not found on server'
             });
         }
+
+        console.log(`[AvatarController] Serving file: ${filepath}`);
 
         // Send file to client
         // sendFile serves inline (displays in browser/app)
@@ -141,8 +168,17 @@ const deleteAvatar = async (req, res) => {
         const userId = req.user.userId;
         const { id } = req.params;
 
+        // Convert id to integer (comes from route params as string)
+        const avatarId = parseInt(id, 10);
+        if (isNaN(avatarId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid avatar ID format'
+            });
+        }
+
         // Get avatar to check permissions
-        const avatar = await Avatar.getById(id);
+        const avatar = await Avatar.getById(avatarId);
         if (!avatar) {
             return res.status(404).json({
                 success: false,
@@ -151,7 +187,7 @@ const deleteAvatar = async (req, res) => {
         }
 
         // Check if user owns this avatar
-        const belongsToUser = await Avatar.belongsToUser(id, userId);
+        const belongsToUser = await Avatar.belongsToUser(avatarId, userId);
         if (!belongsToUser) {
             return res.status(403).json({
                 success: false,
@@ -179,7 +215,7 @@ const deleteAvatar = async (req, res) => {
         }
 
         // Delete from database
-        const deleted = await Avatar.deleteById(id);
+        const deleted = await Avatar.deleteById(avatarId);
         if (!deleted) {
             return res.status(500).json({
                 success: false,
@@ -216,8 +252,21 @@ const getAvatarByPet = async (req, res) => {
             });
         }
 
+        // Convert petId to integer (comes from route params as string)
+        const petIdNum = parseInt(petId, 10);
+        if (isNaN(petIdNum)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid pet ID format'
+            });
+        }
+
+        console.log(`[AvatarController] Fetching avatar for pet ${petIdNum}, user ${userId}`);
+
         // Verify user has access to pet
-        const hasAccess = await Pet.userHasAccess(petId, userId);
+        const hasAccess = await Pet.userHasAccess(petIdNum, userId);
+        console.log(`[AvatarController] User access to pet ${petIdNum}: ${hasAccess}`);
+        
         if (!hasAccess) {
             return res.status(403).json({
                 success: false,
@@ -225,7 +274,8 @@ const getAvatarByPet = async (req, res) => {
             });
         }
 
-        const avatar = await Avatar.getByPetId(petId);
+        const avatar = await Avatar.getByPetId(petIdNum);
+        console.log(`[AvatarController] Avatar query result:`, avatar);
 
         if (!avatar) {
             return res.status(404).json({
