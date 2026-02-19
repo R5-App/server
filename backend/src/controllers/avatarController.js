@@ -170,6 +170,15 @@ const deleteAvatar = async (req, res) => {
             }
         }
 
+        // Delete file from disk
+        const uploadDir = 'uploads/avatars';
+        const filepath = path.join(uploadDir, avatar.filename);
+        
+        if (fs.existsSync(filepath)) {
+            fs.unlinkSync(filepath);  // Delete the file synchronously
+        }
+
+        // Delete from database
         const deleted = await Avatar.deleteById(id);
         if (!deleted) {
             return res.status(500).json({
