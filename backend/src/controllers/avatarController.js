@@ -117,13 +117,9 @@ const downloadAvatar = async (req, res) => {
             });
         }
 
-        console.log(`[AvatarController] Downloading avatar ${avatarId}`);
-
         const avatar = await Avatar.getById(avatarId);
-        console.log(`[AvatarController] Avatar record:`, avatar);
 
         if (!avatar) {
-            console.log(`[AvatarController] Avatar ${avatarId} not found in database`);
             return res.status(404).json({
                 success: false,
                 message: 'Avatar not found'
@@ -134,18 +130,13 @@ const downloadAvatar = async (req, res) => {
         const uploadDir = 'uploads/avatars';
         const filepath = path.join(uploadDir, avatar.filename);
 
-        console.log(`[AvatarController] Looking for file at: ${filepath}`);
-
         // Check if file exists on disk
         if (!fs.existsSync(filepath)) {
-            console.error(`[AvatarController] File not found on disk: ${filepath}`);
             return res.status(404).json({
                 success: false,
                 message: 'Image file not found on server'
             });
         }
-
-        console.log(`[AvatarController] Serving file: ${filepath}`);
 
         // Send file to client
         // sendFile serves inline (displays in browser/app)
@@ -261,12 +252,8 @@ const getAvatarByPet = async (req, res) => {
             });
         }
 
-        console.log(`[AvatarController] Fetching avatar for pet ${petIdNum}, user ${userId}`);
-
         // Verify user has access to pet
         const hasAccess = await Pet.userHasAccess(petIdNum, userId);
-        console.log(`[AvatarController] User access to pet ${petIdNum}: ${hasAccess}`);
-        
         if (!hasAccess) {
             return res.status(403).json({
                 success: false,
@@ -275,7 +262,6 @@ const getAvatarByPet = async (req, res) => {
         }
 
         const avatar = await Avatar.getByPetId(petIdNum);
-        console.log(`[AvatarController] Avatar query result:`, avatar);
 
         if (!avatar) {
             return res.status(404).json({
