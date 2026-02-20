@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyPet – Tietosuojaseloste</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f7f8fc;
+      color: #1a1a2e;
+      line-height: 1.75;
+    }
+
+    .wrapper {
+      max-width: 860px;
+      margin: 40px auto 80px;
+      padding: 0 24px;
+    }
+
+    /* ── Header ── */
+    .hero {
+      background: linear-gradient(135deg, #6200ee 0%, #9c27b0 100%);
+      border-radius: 16px;
+      padding: 48px 40px;
+      color: #fff;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "🐾";
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 96px;
+      opacity: 0.15;
+    }
+    .hero h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .hero .subtitle {
+      font-size: 1.05rem;
+      opacity: 0.9;
+    }
+    .hero .meta {
+      margin-top: 20px;
+      font-size: 0.85rem;
+      opacity: 0.75;
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .hero .meta span::before { margin-right: 6px; }
+
+    /* ── TOC ── */
+    .toc {
+      background: #fff;
+      border: 1px solid #e4e4f0;
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 36px;
+    }
+    .toc h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #6200ee;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .toc ol {
+      padding-left: 20px;
+    }
+    .toc li {
+      margin-bottom: 6px;
+    }
+    .toc a {
+      color: #4a0080;
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    .toc a:hover { text-decoration: underline; }
+
+    /* ── Sections ── */
+    section {
+      background: #fff;
+      border: 1px solid #e4e4f0;
+      border-radius: 12px;
+      padding: 36px 40px;
+      margin-bottom: 24px;
+    }
+
+    section h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #6200ee;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    section h2 .num {
+      background: #6200ee;
+      color: #fff;
+      font-size: 0.80rem;
+      font-weight: 700;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    section h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 22px 0 10px;
+      color: #2d0060;
+    }
+    section p { margin-bottom: 12px; }
+
+    ul, ol {
+      padding-left: 22px;
+      margin-bottom: 14px;
+    }
+    li { margin-bottom: 6px; }
+
+    /* ── Data table ── */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      margin: 16px 0;
+    }
+    .data-table thead tr {
+      background: #f0e8ff;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 10px 14px;
+      font-weight: 600;
+      color: #4a0080;
+      border-bottom: 2px solid #d8b4fe;
+    }
+    .data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #ede9f6;
+      vertical-align: top;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:nth-child(even) td { background: #faf8ff; }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .badge-green  { background: #d1fae5; color: #065f46; }
+    .badge-blue   { background: #dbeafe; color: #1e40af; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-purple { background: #ede9fe; color: #4c1d95; }
+
+    /* ── Callout ── */
+    .callout {
+      border-left: 4px solid #6200ee;
+      background: #f3e8ff;
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+      font-size: 0.95rem;
+      color: #2d0060;
+    }
+
+    /* ── Rights grid ── */
+    .rights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .right-card {
+      background: #f7f8fc;
+      border: 1px solid #e4e4f0;
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .right-card .icon { font-size: 1.4rem; margin-bottom: 6px; }
+    .right-card h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; color: #2d0060; }
+    .right-card p { font-size: 0.85rem; margin: 0; color: #555; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      font-size: 0.82rem;
+      color: #888;
+      margin-top: 48px;
+    }
+
+    @media (max-width: 600px) {
+      section { padding: 24px 20px; }
+      .hero { padding: 32px 24px; }
+      .hero h1 { font-size: 1.6rem; }
+      .hero::after { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ── Hero ── -->
+  <header class="hero">
+    <h1>MyPet – Tietosuojaseloste</h1>
+    <p class="subtitle">Privacy Policy / Dataskyddspolicy</p>
+    <div class="meta">
+      <span>📅 Voimaantulo: 20.2.2026</span>
+      <span>🔄 Viimeksi päivitetty: 20.2.2026</span>
+      <span>📦 Versio 1.0.0</span>
+    </div>
+  </header>
+
+  <!-- ── Table of Contents ── -->
+  <nav class="toc">
+    <h2>Sisällysluettelo</h2>
+    <ol>
+      <li><a href="#s1">Rekisterinpitäjä</a></li>
+      <li><a href="#s2">Kerättävät henkilötiedot</a></li>
+      <li><a href="#s3">Tietojen käyttötarkoitus ja oikeusperuste</a></li>
+      <li><a href="#s4">Sijaintitiedot</a></li>
+      <li><a href="#s5">Tietojen säilytys laitteella</a></li>
+      <li><a href="#s6">Tietojen siirto ja kolmannet osapuolet</a></li>
+      <li><a href="#s7">Tietojen säilytysajat</a></li>
+      <li><a href="#s8">Rekisteröidyn oikeudet</a></li>
+      <li><a href="#s9">Tietoturva</a></li>
+      <li><a href="#s10">Alaikäiset</a></li>
+      <li><a href="#s11">Muutokset tietosuojaselosteeseen</a></li>
+      <li><a href="#s12">Yhteystiedot</a></li>
+    </ol>
+  </nav>
+
+  <!-- ── 1 ── -->
+  <section id="s1">
+    <h2><span class="num">1</span>Rekisterinpitäjä</h2>
+    <p>
+      MyPet-sovelluksen rekisterinpitäjä on sovelluksen kehittäjä ja ylläpitäjä
+      (jäljempänä <strong>"me"</strong>, <strong>"rekisterinpitäjä"</strong>).
+    </p>
+    <table class="data-table">
+      <tr>
+        <td><strong>Sovellus</strong></td>
+        <td>MyPet (com.mypet.mobile)</td>
+      </tr>
+      <tr>
+        <td><strong>Palvelin</strong></td>
+        <td>https://mypet.zroot.it</td>
+      </tr>
+      <tr>
+        <td><strong>Alusta</strong></td>
+        <td>Android (React Native / Expo)</td>
+      </tr>
+    </table>
+    <div class="callout">
+      Käyttämällä MyPet-sovellusta hyväksyt tässä selosteessa kuvatun henkilötietojen käsittelyn.
+    </div>
+  </section>
+
+  <!-- ── 2 ── -->
+  <section id="s2">
+    <h2><span class="num">2</span>Kerättävät henkilötiedot</h2>
+    <p>Keräämme seuraavat tietoryhmät sovelluksen eri toimintojen toteuttamiseksi.</p>
+
+    <h3>2.1 Käyttäjätilitiedot</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Tieto</th>
+          <th>Tarkoitus</th>
+          <th>Pakollinen</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Nimi</td>
+          <td>Käyttäjän tunnistaminen sovelluksessa</td>
+          <td><span class="badge badge-yellow">Kyllä</span></td>
+        </tr>
+        <tr>
+          <td>Sähköpostiosoite</td>
+          <td>Autentikointi, yhteydenotto</td>
+          <td><span class="badge badge-yellow">Kyllä</span></td>
+        </tr>
+        <tr>
+          <td>Käyttäjätunnus</td>
+          <td>Kirjautuminen, jakamistoiminnot</td>
+          <td><span class="badge badge-yellow">Kyllä</span></td>
+        </tr>
+        <tr>
+          <td>Salasana (hajautettu)</td>
+          <td>Tilin suojaus</td>
+          <td><span class="badge badge-yellow">Kyllä</span></td>
+        </tr>
+        <tr>
+          <td>Profiilikuva</td>
+          <td>Käyttäjäprofiilin personointi</td>
+          <td><span class="badge badge-blue">Ei</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>2.2 Lemmikkitiedot</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Tieto</th>
+          <th>Tarkoitus</th>
+          <th>Pakollinen</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Lemmikin nimi, laji, rotu, sukupuoli, syntymäpäivä</td>
+          <td>Lemmikin profiilin hallinta</td>
+          <td><span class="badge badge-yellow">Kyllä</span></td>
+        </tr>
+        <tr>
+          <td>Paino</td>
+          <td>Painonseuranta</td>
+          <td><span class="badge badge-blue">Ei</span></td>
+        </tr>
+        <tr>
+          <td>Valokuva</td>
+          <td>Profiilikuva lemmikille</td>
+          <td><span class="badge badge-blue">Ei</span></td>
+        </tr>
+        <tr>
+          <td>Muistiinpanot</td>
+          <td>Vapaamuotoinen tiedon tallennus</td>
+          <td><span class="badge badge-blue">Ei</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>2.3 Terveys- ja hoitotiedot</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Tietoryhmä</th>
+          <th>Sisältö</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Lääkitykset</strong></td>
+          <td>Lääkkeen nimi, päivämäärä, vanhentumispäivä, muistiinpanot, kustannukset</td>
+        </tr>
+        <tr>
+          <td><strong>Rokotukset</strong></td>
+          <td>Rokotteen nimi, rokotuspäivä, vanhentumispäivä, muistiinpanot, kustannukset</td>
+        </tr>
+        <tr>
+          <td><strong>Eläinlääkärikäynnit</strong></td>
+          <td>Käyntipäivä, sijainti, eläinlääkärin nimi, käyntiluokka, muistiinpanot, kustannukset</td>
+        </tr>
+        <tr>
+          <td><strong>Painoseuranta</strong></td>
+          <td>Päivämäärä + mitattu paino</td>
+        </tr>
+        <tr>
+          <td><strong>Kalenteritapahtumat</strong></td>
+          <td>Otsikko, kuvaus, päivämäärä, kellonaika, muistutusaika, tapahtumalaaji</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>2.4 Kävelytiedot ja sijaintidata</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Tieto</th>
+          <th>Tarkoitus</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>GPS-koordinaatit (leveysaste, pituusaste, korkeus)</td>
+          <td>Kävelyn reittitallenne</td>
+        </tr>
+        <tr>
+          <td>Aikaleimat kävelystä</td>
+          <td>Keston laskeminen</td>
+        </tr>
+        <tr>
+          <td>Etäisyys, keskinopeus, askelmäärä</td>
+          <td>Kävelyn tilastot</td>
+        </tr>
+        <tr>
+          <td>GPS-tarkkuus</td>
+          <td>Reitin laadunvarmistus</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>2.5 Jaetut lemmikkitiedot</h3>
+    <p>
+      Kun käytät lemmikin jakamistoimintoa, tallennamme tiedon siitä, kenen kanssa
+      lemmikki on jaettu (käyttäjätunnus, sähköposti, nimi) sekä annetun roolin
+      (<em>omistaja / hoitaja / eläinlääkäri</em>).
+    </p>
+  </section>
+
+  <!-- ── 3 ── -->
+  <section id="s3">
+    <h2><span class="num">3</span>Tietojen käyttötarkoitus ja oikeusperuste</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Käyttötarkoitus</th>
+          <th>Oikeusperuste (GDPR art. 6)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Käyttäjätilin luominen ja autentikointi</td>
+          <td><span class="badge badge-purple">Sopimus (6.1.b)</span></td>
+        </tr>
+        <tr>
+          <td>Lemmikin terveys- ja hoitotietojen hallinta</td>
+          <td><span class="badge badge-purple">Sopimus (6.1.b)</span></td>
+        </tr>
+        <tr>
+          <td>Kävelyreittien tallennus ja tilastointi</td>
+          <td><span class="badge badge-green">Suostumus (6.1.a)</span></td>
+        </tr>
+        <tr>
+          <td>Lemmikin jakaminen muille käyttäjille</td>
+          <td><span class="badge badge-green">Suostumus (6.1.a)</span></td>
+        </tr>
+        <tr>
+          <td>Kalenterimuistutusten lähettäminen</td>
+          <td><span class="badge badge-purple">Sopimus (6.1.b)</span></td>
+        </tr>
+        <tr>
+          <td>Palvelun tietoturva ja väärinkäytösten esto</td>
+          <td><span class="badge badge-blue">Oikeutettu etu (6.1.f)</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── 4 ── -->
+  <section id="s4">
+    <h2><span class="num">4</span>Sijaintitiedot</h2>
+    <p>
+      Sovellus pyytää pääsyä laitteesi sijaintiin ainoastaan, kun käytät
+      <strong>kävelynseuranta-toimintoa</strong>. Sijainti kerätään kahdella tasolla:
+    </p>
+    <ul>
+      <li>
+        <strong>Etualuesijainti (foreground):</strong> Pakollisin edellytys kävelyn
+        tallentamiselle. Kerätään vain sovelluksen ollessa aktiivisena.
+      </li>
+      <li>
+        <strong>Taustasijainti (background):</strong> Valinnainen. Mahdollistaa
+        tarkemman reitin seurannan, kun sovellus on taustalla. Voit hylätä tämän
+        luvan ilman, että perustoiminnot kärsivät merkittävästi.
+      </li>
+    </ul>
+    <div class="callout">
+      <strong>Sijaintitietoja ei koskaan jaeta kolmansille osapuolille</strong> eikä
+      niitä käytetä mainontaan tai profilointiin. GPS-data siirretään palvelimelle
+      ainoastaan silloin, kun käyttäjä itse valitsee kävelysynkronoinnin.
+    </div>
+    <p>
+      Voit peruuttaa sijaintiluvan milloin tahansa laitteesi asetuksista.
+      Tämä poistaa kävelynseurannan sovelluksesta käytöstä.
+    </p>
+  </section>
+
+  <!-- ── 5 ── -->
+  <section id="s5">
+    <h2><span class="num">5</span>Tietojen säilytys laitteella</h2>
+    <p>
+      Sovellus tallentaa seuraavat tiedot laitteen paikalliseen tallennustilaan
+      (AsyncStorage) ilman ulkopuolisten palveluiden käyttöä:
+    </p>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Tallennettu tieto</th>
+          <th>Syy</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Autentikointitoken (JWT)</td>
+          <td>Kirjautumistilan ylläpito (7 vrk voimassaolo)</td>
+        </tr>
+        <tr>
+          <td>Käyttäjäprofiilidata</td>
+          <td>Offline-käyttö ja nopea lataus</td>
+        </tr>
+        <tr>
+          <td>Kävelyn reittitiedot (paikallinen varmuuskopio)</td>
+          <td>Synkronoimattomat kävelyt ennen palvelimelle lähetystä</td>
+        </tr>
+        <tr>
+          <td>Kävelyasetukset</td>
+          <td>Käyttäjän asetusten muistaminen</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Paikallinen data poistetaan automaattisesti, kun kirjaudut ulos tai
+      poistat tilin. Voit tyhjentää paikallisen datan myös poistamalla
+      sovelluksen laitteestasi.
+    </p>
+  </section>
+
+  <!-- ── 6 ── -->
+  <section id="s6">
+    <h2><span class="num">6</span>Tietojen siirto ja kolmannet osapuolet</h2>
+
+    <h3>6.1 Palvelimelle siirrettävät tiedot</h3>
+    <p>
+      Kaikki palvelimelle (<code>https://mypet.zroot.it</code>) siirrettävä
+      liikenne käyttää <strong>HTTPS-salattua yhteyttä</strong>.
+      Palvelin sijaitsee EU:n alueella; henkilötietoja ei siirretä EU/ETA-alueen
+      ulkopuolelle.
+    </p>
+
+    <h3>6.2 Sovelluksen käyttämät kirjastot</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Kirjasto / Kehys</th>
+          <th>Käyttötarkoitus</th>
+          <th>Kerää henkilötietoja</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>React Native / Expo</td>
+          <td>Sovelluskehys</td>
+          <td><span class="badge badge-blue">Ei suoraan</span></td>
+        </tr>
+        <tr>
+          <td>Axios</td>
+          <td>HTTP-pyyntöjen tekeminen</td>
+          <td><span class="badge badge-blue">Ei</span></td>
+        </tr>
+        <tr>
+          <td>expo-location</td>
+          <td>GPS-sijainnin lukeminen</td>
+          <td><span class="badge badge-blue">Ei tallenna erikseen</span></td>
+        </tr>
+        <tr>
+          <td>AsyncStorage</td>
+          <td>Paikallinen tallennustila</td>
+          <td><span class="badge badge-blue">Vain laitteella</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>6.3 Tietoja ei myydä eikä luovuteta</h3>
+    <p>
+      Emme <strong>myy, vuokraa tai luovuta</strong> käyttäjätietoja kolmansille
+      osapuolille markkinointitarkoituksiin. Tietoja voidaan luovuttaa ainoastaan
+      lainmukaisten viranomaismääräysten perusteella.
+    </p>
+  </section>
+
+  <!-- ── 7 ── -->
+  <section id="s7">
+    <h2><span class="num">7</span>Tietojen säilytysajat</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Säilytysaika</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Käyttäjätili ja siihen liittyvät tiedot</td>
+          <td>Tilin aktiivisuusaika + 30 päivää tilin poistamisen jälkeen</td>
+        </tr>
+        <tr>
+          <td>Autentikointitoken (laitteella)</td>
+          <td>7 päivää tai kirjautumisesta asti uloskirjautumiseen</td>
+        </tr>
+        <tr>
+          <td>Kävely- ja sijaintidata</td>
+          <td>Tilin aktiivisuusaika; poistetaan tilin poistamisen yhteydessä</td>
+        </tr>
+        <tr>
+          <td>Terveys- ja hoitorekisterit</td>
+          <td>Tilin aktiivisuusaika</td>
+        </tr>
+        <tr>
+          <td>Lokitiedot palvelimella</td>
+          <td>Enintään 90 päivää</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── 8 ── -->
+  <section id="s8">
+    <h2><span class="num">8</span>Rekisteröidyn oikeudet</h2>
+    <p>
+      GDPR:n nojalla sinulla on seuraavat oikeudet henkilötietojesi käsittelyn
+      suhteen:
+    </p>
+    <div class="rights-grid">
+      <div class="right-card">
+        <div class="icon">🔍</div>
+        <h4>Tarkastusoikeus</h4>
+        <p>Voit pyytää nähtäväksi sinusta tallennetut tiedot.</p>
+      </div>
+      <div class="right-card">
+        <div class="icon">✏️</div>
+        <h4>Oikaisupyyntö</h4>
+        <p>Voit korjata virheelliset tai puutteelliset tiedot.</p>
+      </div>
+      <div class="right-card">
+        <div class="icon">🗑️</div>
+        <h4>Poistopyyntö</h4>
+        <p>
+          Voit poistaa tilisi sovelluksen asetuksista.
+          Kaikki henkilötiedot poistetaan 30 päivän kuluessa.
+        </p>
+      </div>
+      <div class="right-card">
+        <div class="icon">⛔</div>
+        <h4>Käsittelyn rajoitus</h4>
+        <p>Voit pyytää tietojesi käsittelyn rajoittamista tietyissä tilanteissa.</p>
+      </div>
+      <div class="right-card">
+        <div class="icon">📤</div>
+        <h4>Tietojen siirrettävyys</h4>
+        <p>Voit pyytää tietosi koneluettavassa muodossa.</p>
+      </div>
+      <div class="right-card">
+        <div class="icon">🚫</div>
+        <h4>Vastustamisoikeus</h4>
+        <p>Voit vastustaa oikeutettuun etuun perustuvaa käsittelyä.</p>
+      </div>
+      <div class="right-card">
+        <div class="icon">↩️</div>
+        <h4>Suostumuksen peruutus</h4>
+        <p>
+          Voit peruuttaa suostumuksesi (esim. sijaintilupa) milloin tahansa
+          ilman, että se vaikuttaa menneeseen käsittelyyn.
+        </p>
+      </div>
+      <div class="right-card">
+        <div class="icon">🏛️</div>
+        <h4>Valitusikeoikeus</h4>
+        <p>
+          Voit tehdä valituksen valvontaviranomaiselle
+          (Suomessa: <strong>Tietosuojavaltuutettu</strong>,
+          <a href="https://tietosuoja.fi" target="_blank" rel="noopener">tietosuoja.fi</a>).
+        </p>
+      </div>
+    </div>
+
+    <div class="callout">
+      Tilin voi poistaa suoraan sovelluksesta kohdasta
+      <strong>Asetukset → Poista tili</strong>. Muihin pyyntöihin vastataan
+      30 päivän kuluessa.
+    </div>
+  </section>
+
+  <!-- ── 9 ── -->
+  <section id="s9">
+    <h2><span class="num">9</span>Tietoturva</h2>
+    <ul>
+      <li>Kaikki tietoliikenne palvelimen ja sovelluksen välillä on salattu <strong>TLS/HTTPS</strong>-protokollalla.</li>
+      <li>Salasanat tallennetaan palvelimelle <strong>hajautettuna</strong> (ei selväkielisenä).</li>
+      <li>Autentikointitokenit ovat aikarajoitettuja (7 päivää) ja poistetaan uloskirjautumisen yhteydessä.</li>
+      <li>Paikallinen data tallennetaan laitteen suojattuun AsyncStorage-varastoon.</li>
+      <li>Palvelimelle tehtyihin API-pyyntöihin vaaditaan aina voimassa oleva Bearer-token.</li>
+    </ul>
+    <p>
+      Tietoturvaloukkaustilanteissa ilmoitamme asianomaisille rekisteröidyille ja
+      toimivaltaiselle valvontaviranomaiselle GDPR:n vaatimassa 72 tunnin määräajassa.
+    </p>
+  </section>
+
+  <!-- ── 10 ── -->
+  <section id="s10">
+    <h2><span class="num">10</span>Alaikäiset</h2>
+    <p>
+      MyPet-sovellus on tarkoitettu henkilöille, jotka ovat täyttäneet <strong>13 vuotta</strong>.
+      Alle 13-vuotiaiden ei tule rekisteröityä palveluun ilman vanhemman tai
+      huoltajan suostumusta. Jos saamme tietää, että olemme keränneet alle
+      13-vuotiaan henkilötietoja ilman asianmukaista suostumusta, poistamme
+      tiedot viipymättä.
+    </p>
+  </section>
+
+  <!-- ── 11 ── -->
+  <section id="s11">
+    <h2><span class="num">11</span>Muutokset tietosuojaselosteeseen</h2>
+    <p>
+      Pidätämme oikeuden muuttaa tätä tietosuojaselostetta. Olennaisista muutoksista
+      ilmoitetaan sovelluksen kautta tai sähköpostitse vähintään <strong>14 päivää
+      ennen</strong> muutoksen voimaantuloa. Ajantasainen seloste on aina
+      saatavilla sovelluksessa sekä sen virallisilla verkkosivuilla.
+    </p>
+    <p>
+      Jatkamalla sovelluksen käyttöä muutoksen voimaantulon jälkeen hyväksyt
+      päivitetyn tietosuojaselosteen.
+    </p>
+  </section>
+
+  <!-- ── 12 ── -->
+  <section id="s12">
+    <h2><span class="num">12</span>Yhteystiedot</h2>
+    <p>
+      Rekisteröidyn oikeuksiin liittyvät pyynnöt sekä tietosuojaa koskevat
+      kysymykset ja huomiot voidaan lähettää sovelluksen sisäisen palautekanavan
+      kautta tai suoraan rekisterinpitäjälle.
+    </p>
+    <p>
+      <strong>Valvontaviranomainen Suomessa:</strong><br />
+      Tietosuojavaltuutetun toimisto<br />
+      PL 800, 00531 Helsinki<br />
+      <a href="https://tietosuoja.fi" target="_blank" rel="noopener">tietosuoja.fi</a>
+    </p>
+
+    <div class="callout">
+      Vastaamme kaikkiin tietosuojapyyntöihin 30 päivän kuluessa pyynnön vastaanottamisesta.
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>
+    &copy; 2026 MyPet. Tietosuojaseloste on laadittu EU:n yleisen tietosuoja-asetuksen
+    (GDPR, 2016/679) vaatimusten mukaisesti.
+  </p>
+  <p style="margin-top:6px;">Voimassa: 20.2.2026 | Versio 1.0.0</p>
+</footer>
+</body>
+</html>
