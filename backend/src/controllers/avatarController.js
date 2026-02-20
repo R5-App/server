@@ -245,6 +245,8 @@ const getAvatarByPet = async (req, res) => {
 
         // Convert petId to integer (comes from route params as string)
         const petIdNum = parseInt(petId, 10);
+        console.log(`[AvatarController] Converting petId: "${petId}" -> ${petIdNum} (isNaN: ${isNaN(petIdNum)})`);
+        
         if (isNaN(petIdNum)) {
             return res.status(400).json({
                 success: false,
@@ -252,8 +254,12 @@ const getAvatarByPet = async (req, res) => {
             });
         }
 
+        console.log(`[AvatarController] Fetching avatar for pet ${petIdNum}, user ${userId}`);
+
         // Verify user has access to pet
         const hasAccess = await Pet.userHasAccess(petIdNum, userId);
+        console.log(`[AvatarController] User access check: ${hasAccess}`);
+        
         if (!hasAccess) {
             return res.status(403).json({
                 success: false,
@@ -261,9 +267,12 @@ const getAvatarByPet = async (req, res) => {
             });
         }
 
+        console.log(`[AvatarController] Calling Avatar.getByPetId(${petIdNum})`);
         const avatar = await Avatar.getByPetId(petIdNum);
+        console.log(`[AvatarController] Avatar query result:`, avatar);
 
         if (!avatar) {
+            console.error(`[AvatarController] NO AVATAR FOUND for pet ${petIdNum}. Check if pet_id column matches.`);
             return res.status(404).json({
                 success: false,
                 message: 'No avatar found for this pet'
