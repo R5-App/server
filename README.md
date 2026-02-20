@@ -404,27 +404,83 @@ Common HTTP status codes:
 - `429`: Too Many Requests (rate limit exceeded)
 - `500`: Internal Server Error
 
-## Project Structure
+## Repository Architecture
 
 ```
-backend/
-├── src/
-│   ├── config/          # Configuration files
-│   ├── controllers/     # Request handlers
-│   ├── middleware/      # Custom middleware
-│   ├── models/          # Database models
-│   ├── routes/          # API route definitions
-│   ├── services/        # Business logic
-│   ├── types/           # Type definitions
-│   └── utils/           # Helper functions
-├── uploads/
-│   └── avatars/         # Avatar image storage
-├── .env.example         # Environment variables template
-├── docker-compose.ci.yml # Docker configuration
-├── Dockerfile           # Docker image definition
-└── package.json         # Dependencies and scripts
-
+server/
+├── database.sql              # PostgreSQL database schema
+├── LICENSE                   # License information
+├── README.md                 # This documentation
+│
+└── backend/                  # Main application directory
+    ├── docker-compose.ci.yml # Docker Compose for CI/testing
+    ├── Dockerfile            # Container definition
+    ├── package.json          # Node.js dependencies and scripts
+    │
+    ├── src/                  # Source code
+    │   ├── index.js          # Application entry point & server config
+    │   ├── PRIVACY_POLICY.html
+    │   │
+    │   ├── config/           # Configuration modules
+    │   │   ├── database.js   # PostgreSQL connection pool
+    │   │   └── jwt.js        # JWT token configuration
+    │   │
+    │   ├── controllers/      # Business logic & request handlers
+    │   │   ├── authController.js        # User authentication & account management
+    │   │   ├── avatarController.js      # Avatar upload & retrieval
+    │   │   ├── calendarEventController.js # Calendar event CRUD operations
+    │   │   ├── medicationController.js  # Medication tracking
+    │   │   ├── petController.js         # Pet profile management & sharing
+    │   │   ├── routeController.js       # GPS route tracking
+    │   │   ├── vaccinationController.js # Vaccination records
+    │   │   ├── vetVisitController.js    # Vet visit tracking
+    │   │   └── weightController.js      # Weight monitoring
+    │   │
+    │   ├── middleware/       # Request processing pipeline
+    │   │   ├── authenticateToken.js           # JWT validation
+    │   │   ├── avatarUpload.js                # Multer file upload config
+    │   │   ├── resolveEffectiveUser.js        # Multi-user & sub-user resolution
+    │   │   ├── validateLogin.js               # Login input validation
+    │   │   ├── validateRegistration.js        # Registration input validation
+    │   │   ├── validateSubUserRegistration.js # Sub-user creation validation
+    │   │   └── validateSubUserRoleUpdate.js   # Role update validation
+    │   │
+    │   ├── models/           # Database access layer
+    │   │   ├── Avatar.js         # Avatar database operations
+    │   │   ├── CalendarEvent.js  # Calendar event queries
+    │   │   ├── Medication.js     # Medication CRUD
+    │   │   ├── Pet.js            # Pet profile & sharing logic
+    │   │   ├── Route.js          # GPS route storage
+    │   │   ├── User.js           # User & authentication queries
+    │   │   ├── Vaccination.js    # Vaccination records
+    │   │   ├── VetVisit.js       # Vet visit data
+    │   │   └── Weight.js         # Weight tracking
+    │   │
+    │   ├── routes/           # API endpoint definitions
+    │   │   ├── avatarRoutes.js         # /api/avatars/*
+    │   │   ├── calendarEventRoutes.js  # /api/calendar-events/*
+    │   │   ├── medicationRoutes.js     # /api/medications/*
+    │   │   ├── petRoutes.js            # /api/pets/*
+    │   │   ├── routeRoutes.js          # /api/routes/*
+    │   │   ├── userRoutes.js           # /api/auth/*
+    │   │   ├── vaccinationRoutes.js    # /api/vaccinations/*
+    │   │   ├── vetVisitRoutes.js       # /api/vet-visits/*
+    │   │   └── weightRoutes.js         # /api/weights/*
+    │   │
+    │   ├── services/         # Business logic services (reserved for future use)
+    │   │
+    │   ├── types/            # Type definitions (reserved for future use)
+    │   │
+    │   └── utils/            # Helper functions & utilities
+    │       ├── generateToken.js  # JWT token generation
+    │       ├── hashPassword.js   # bcrypt password hashing
+    │       └── shareCode.js      # Pet sharing code generation
+    │
+    └── uploads/              # File storage
+        └── avatars/          # User & pet avatar images
 ```
+
+
 
 ## Development
 
