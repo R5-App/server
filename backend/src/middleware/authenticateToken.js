@@ -5,9 +5,14 @@ const { verifyToken } = require('../utils/generateToken');
  */
 const authenticateToken = (req, res, next) => {
   try {
-    // Get token from Authorization header
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    // Get token from Authorization header OR query parameter
+    let authHeader = req.headers['authorization'];
+    let token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    // Fallback to query parameter (for image URLs that can't send headers)
+    if (!token && req.query.token) {
+      token = req.query.token;
+    }
 
     if (!token) {
       return res.status(401).json({
