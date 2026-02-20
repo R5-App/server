@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 // Import routes
@@ -78,6 +79,11 @@ app.use('/api/vet-visits', authLimiter, vetVisitRoutes);
 app.use('/api/weights', authLimiter, weightRoutes);
 app.use('/api/routes', authLimiter, routeRoutes);
 app.use('/api/calendar-events', authLimiter, calendarEventRoutes);
+
+// Privacy Policy - public route
+app.get('/privacy-policy', (req, res) => {
+  res.sendFile(path.join(__dirname, 'PRIVACY_POLICY.html'));
+});
 
 // 404 handler
 app.use((req, res) => {
